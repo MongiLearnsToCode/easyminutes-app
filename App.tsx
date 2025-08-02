@@ -10,6 +10,7 @@ import PricingPage from './components/PricingPage';
 import { LogoIcon } from './constants';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
+import { ToastProvider } from '@/components/ui/toast';
 
 const App: React.FC = () => {
     const [session, setSession] = useState<Session | null>(null);
@@ -113,12 +114,14 @@ if (!session) {
     }
 
     return (
-        <div className="min-h-screen bg-background font-sans text-foreground">
-            <Header currentView={view} onNavigate={handleNavigate} session={session} savingStatus={savingStatus} />
-            {view === 'dashboard' && <Dashboard onShowAll={() => handleNavigate('allMeetings')} selectedMeetingId={selectedMeetingId} onSavingStatusChange={setSavingStatus} />}
-            {view === 'allMeetings' && <AllMeetingsPage onSelectMeeting={handleSelectMeetingFromAll} onBack={() => handleNavigate('dashboard')} />}
-            {view === 'pricing' && <PricingPage />}
-        </div>
+        <ToastProvider>
+            <div className="min-h-screen bg-background font-sans text-foreground">
+                <Header currentView={view} onNavigate={handleNavigate} session={session} savingStatus={savingStatus} />
+                {view === 'dashboard' && <Dashboard onShowAll={() => handleNavigate('allMeetings')} selectedMeetingId={selectedMeetingId} onSavingStatusChange={setSavingStatus} />}
+                {view === 'allMeetings' && <AllMeetingsPage onSelectMeeting={handleSelectMeetingFromAll} onBack={() => handleNavigate('dashboard')} />}
+                {view === 'pricing' && <PricingPage />}
+            </div>
+        </ToastProvider>
     );
 }
 

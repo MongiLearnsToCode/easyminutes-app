@@ -21,6 +21,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Skeleton } from '@/components/ui/skeleton';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { ConfirmationDialog } from './ConfirmationDialog';
+import { useToast } from '@/components/ui/toast';
 
 type ActiveTab = 'text' | 'voice' | 'upload';
 
@@ -190,6 +191,7 @@ className="ml-2 text-xs font-bold text-foreground bg-primary/10 px-2 py-1 rounde
 };
 
 const Dashboard: React.FC<{ onShowAll: () => void; selectedMeetingId: string | null; onSavingStatusChange: (status: { isAutoSaving: boolean; hasUnsavedChanges: boolean; currentSummary: any; } | undefined) => void; }> = ({ onShowAll, selectedMeetingId, onSavingStatusChange }) => {
+    const toast = useToast();
     const [activeTab, setActiveTab] = useState<ActiveTab>('text');
     const [inputText, setInputText] = useState('');
     const [transcript, setTranscript] = useState('');
@@ -285,18 +287,20 @@ const Dashboard: React.FC<{ onShowAll: () => void; selectedMeetingId: string | n
         if (!summary) return;
         const textToCopy = formatSummaryAsText(summary);
         navigator.clipboard.writeText(textToCopy).then(() => {
+            toast.success('Copied to clipboard!', 'Meeting minutes have been copied to your clipboard.');
             setCopyStatusText('Copied!');
             setTimeout(() => {
                 setCopyStatusText('Copy to Clipboard');
             }, 1500);
         }).catch(err => {
             console.error('Failed to copy text: ', err);
+            toast.error('Failed to copy', 'Unable to copy to clipboard. Please try again.');
             setCopyStatusText('Failed to copy');
              setTimeout(() => {
                 setCopyStatusText('Copy to Clipboard');
             }, 2000);
         });
-    }, []);
+    }, [toast]);
 
     const handleShareByEmail = useCallback((summary: MeetingSummary) => {
         if (!summary) return;
@@ -304,7 +308,8 @@ const Dashboard: React.FC<{ onShowAll: () => void; selectedMeetingId: string | n
         const body = formatSummaryAsText(summary);
         const mailtoLink = `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
         window.location.href = mailtoLink;
-    }, []);
+        toast.info('Opening email client', 'Your default email client should open with the meeting minutes.');
+    }, [toast]);
 
     const handleExportDocx = useCallback((summary: MeetingSummary) => {
         if (!summary) return;
@@ -356,6 +361,10 @@ const Dashboard: React.FC<{ onShowAll: () => void; selectedMeetingId: string | n
         });
         Packer.toBlob(doc).then(blob => {
             saveAs(blob, `${summary.title.replace(/[^a-z0-9]/gi, '_').toLowerCase()}_minutes.docx`);
+            toast.success('Document exported!', 'Your meeting minutes have been downloaded as a Word document.');
+        }).catch(err => {
+            console.error('Failed to export DOCX:', err);
+            toast.error('Export failed', 'Unable to export as Word document. Please try again.');
         });
     }, []);
 
@@ -441,6 +450,7 @@ const Dashboard: React.FC<{ onShowAll: () => void; selectedMeetingId: string | n
         }
         
         doc.save(`${summary.title.replace(/[^a-z0-9]/gi, '_').toLowerCase()}_minutes.pdf`);
+        toast.success('PDF exported!', 'Your meeting minutes have been downloaded as a PDF document.');
     }, []);
 
     useEffect(() => {
@@ -479,12 +489,14 @@ const Dashboard: React.FC<{ onShowAll: () => void; selectedMeetingId: string | n
         if (isRecording) {
             recognitionRef.current.stop();
             setIsRecording(false);
+            toast.info('Recording stopped', 'Voice recording has been stopped. Your transcript is ready for analysis.');
         } else {
             setTranscript('');
             setError(null);
             setCurrentSummary(null);
             recognitionRef.current.start();
             setIsRecording(true);
+            toast.success('Recording started', 'Voice recording is now active. Start speaking to capture your meeting.');
         }
     };
     
@@ -495,12 +507,15 @@ const Dashboard: React.FC<{ onShowAll: () => void; selectedMeetingId: string | n
         setAudioInput(null);
         setCurrentSummary(null);
         
+        toast.info('Processing file', `Analyzing ${file.name}...`);
+        
         // Security validation
         const validation = SecureFileUpload.validateFile(file);
         if (!validation.isValid) {
             setError(validation.error || 'Invalid file');
             setUploadedFile(null);
             setIsProcessingFile(false);
+            toast.error('File validation failed', validation.error || 'The uploaded file is not valid or supported.');
             return;
         }
         
@@ -510,6 +525,7 @@ const Dashboard: React.FC<{ onShowAll: () => void; selectedMeetingId: string | n
             setError(`Security check failed: ${scanResult.reason}`);
             setUploadedFile(null);
             setIsProcessingFile(false);
+            toast.error('Security check failed', scanResult.reason || 'The file failed security validation.');
             return;
         }
         
@@ -521,25 +537,34 @@ const Dashboard: React.FC<{ onShowAll: () => void; selectedMeetingId: string | n
                     const base64 = (e.target?.result as string).split(',')[1];
                     setAudioInput({ mimeType: type, data: base64 });
                     setIsProcessingFile(false);
+                    toast.success('Audio file processed!', `${file.name} is ready for transcription and analysis.`);
                 };
-                reader.onerror = () => { setError("Failed to read the audio file."); setIsProcessingFile(false); }
+                reader.onerror = () => { 
+                    setError("Failed to read the audio file."); 
+                    setIsProcessingFile(false);
+                    toast.error('Audio processing failed', 'Unable to read the audio file. Please try a different file.');
+                }
                 reader.readAsDataURL(file);
             } else if (name.endsWith('.docx')) {
                 const result = await mammoth.extractRawText({ arrayBuffer: await file.arrayBuffer() });
                 setInputText(result.value);
                 setIsProcessingFile(false);
+                toast.success('Document processed!', `Text extracted from ${file.name} successfully.`);
             } else if (type.startsWith('text/')) {
                 setInputText(await file.text());
                 setIsProcessingFile(false);
+                toast.success('Text file processed!', `${file.name} has been loaded and is ready for analysis.`);
             } else {
                 setError(`Unsupported file type: ${type || 'unknown'}. Please upload a text, docx, or audio file.`);
                 setUploadedFile(null);
                 setIsProcessingFile(false);
+                toast.error('Unsupported file type', `${type || 'Unknown'} files are not supported. Please upload TXT, DOCX, MP3, WAV, or M4A files.`);
             }
         } catch (e) {
             setError("An error occurred while processing the file.");
             setUploadedFile(null);
             setIsProcessingFile(false);
+            toast.error('File processing error', 'An unexpected error occurred while processing the file. Please try again.');
         }
     }, []);
 
@@ -588,8 +613,10 @@ const Dashboard: React.FC<{ onShowAll: () => void; selectedMeetingId: string | n
             await loadMinutesFromDB();
             setCurrentSummary(newSummary);
             setOriginalSummaryForDiff(newSummary);
+            toast.success('Meeting minutes generated!', 'Your AI-powered meeting summary is ready for review and editing.');
         } catch (e: unknown) {
             setError(e instanceof Error ? e.message : "An unexpected error occurred.");
+            toast.error('Generation failed', e instanceof Error ? e.message : 'Unable to generate meeting minutes. Please try again.');
         } finally {
             setIsLoading(false);
         }
@@ -663,14 +690,17 @@ const Dashboard: React.FC<{ onShowAll: () => void; selectedMeetingId: string | n
                 setCurrentSummary(null);
                 setOriginalSummaryForDiff(null);
             }
+            toast.success('Meeting deleted', `"${deleteConfirmation.meetingTitle}" has been permanently removed from your meetings.`);
             setDeleteConfirmation({ isOpen: false, meetingId: null, meetingTitle: '' });
         } catch (e) {
-            setError(e instanceof Error ? e.message : "Failed to delete minutes.");
+            const errorMessage = e instanceof Error ? e.message : "Failed to delete minutes.";
+            setError(errorMessage);
+            toast.error('Deletion failed', errorMessage);
             console.error(e);
         } finally {
             setIsDeleting(false);
         }
-    }, [deleteConfirmation.meetingId, currentSummary, loadMinutesFromDB]);
+    }, [deleteConfirmation.meetingId, deleteConfirmation.meetingTitle, currentSummary, loadMinutesFromDB, toast]);
 
     const handleDeleteCancel = useCallback(() => {
         setDeleteConfirmation({ isOpen: false, meetingId: null, meetingTitle: '' });
@@ -710,7 +740,7 @@ const Dashboard: React.FC<{ onShowAll: () => void; selectedMeetingId: string | n
         <main className="container mx-auto p-1 sm:p-2 md:p-4 lg:p-8 max-w-7xl">
             <div className="grid grid-cols-1 lg:grid-cols-5 gap-3 sm:gap-4 md:gap-6 lg:gap-8 lg:items-start">
                 {/* Left Column - Meeting Notes */}
-                <div className="lg:col-span-2 bg-card p-3 sm:p-4 md:p-6 rounded-xl sm:rounded-2xl shadow-sm flex flex-col space-y-4 sm:space-y-6 order-2 lg:order-1">
+                <div className="lg:col-span-2 bg-card p-3 sm:p-4 md:p-6 rounded-xl sm:rounded-2xl shadow-sm flex flex-col space-y-4 sm:space-y-6 order-1 lg:order-1">
                     <div>
                         <h2 className="text-2xl font-bold text-foreground mb-4">Meeting Notes</h2>
                         <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as ActiveTab)}>
@@ -856,7 +886,7 @@ const Dashboard: React.FC<{ onShowAll: () => void; selectedMeetingId: string | n
                                 size="lg"
                                 className="w-full"
                             >
-                                ✨ Start New Meeting
+                                Start New Meeting
                             </Button>
                             )}
                         </div>
@@ -911,7 +941,7 @@ const Dashboard: React.FC<{ onShowAll: () => void; selectedMeetingId: string | n
                 </div>
 
                 {/* Right Column - Summary */}
-<div className="lg:col-span-3 bg-card p-3 sm:p-4 md:p-6 rounded-xl sm:rounded-2xl shadow-sm order-1 lg:order-2">
+<div className="lg:col-span-3 bg-card p-3 sm:p-4 md:p-6 rounded-xl sm:rounded-2xl shadow-sm order-2 lg:order-2">
                     <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-3 sm:gap-4">
                       <div className="flex items-center space-x-3 flex-grow min-w-0 w-full sm:w-auto">
                           {currentSummary ? (
