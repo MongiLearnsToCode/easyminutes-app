@@ -5,15 +5,24 @@ export interface ActionItem {
 }
 
 export interface MeetingSummary {
-  id: string; 
-  userId?: string;
-  createdAt: string; 
+  id: string;
+  createdAt: string;
   title: string;
   attendees: string[];
   summary: string;
   keyPoints: string[];
   actionItems: ActionItem[];
   decisions: string[];
+}
+
+export interface UserProfile {
+  id: string;
+  name: string;
+  email: string;
+  avatar_url?: string;
+  theme_preference: 'light' | 'dark' | 'system';
+  created_at: string;
+  updated_at: string;
 }
 
 export interface SummarizeAudioInput {

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { CheckCircleIcon, LogoIcon } from '../constants';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -7,6 +7,11 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Separator } from '@/components/ui/separator';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Loader2 } from 'lucide-react';
+import { polarService } from '../services/polarService';
+import { supabase } from '../services/dbService';
+import { subscriptionService } from '../services/subscriptionService';
+import { isSandboxMode, logDevInfo, POLAR_DEV_CONFIG } from '../config/polar-dev';
 
 interface PricingPlan {
     name: string;
@@ -24,6 +29,16 @@ interface PricingPlan {
 const PricingPage: React.FC = () => {
     const [selectedPlan, setSelectedPlan] = useState<string | null>(null);
     const [isDialogOpen, setIsDialogOpen] = useState(false);
+    const [isProcessing, setIsProcessing] = useState(false);
+    const [error, setError] = useState<string | null>(null);
+    
+    // Log sandbox mode on component mount
+    useEffect(() => {
+        if (isSandboxMode()) {
+            logDevInfo('PricingPage loaded in sandbox mode');
+            console.log('🧪 Sandbox Mode Active - Test cards available:', POLAR_DEV_CONFIG.TEST_CARDS);
+        }
+    }, []);
     
     const pricingPlans: PricingPlan[] = [
         {
@@ -101,12 +116,79 @@ const PricingPage: React.FC = () => {
         setIsDialogOpen(true);
     };
     
-    const handleConfirmSelection = () => {
-        // TODO: Implement subscription logic
-        console.log(`Confirmed plan: ${selectedPlan}`);
-        setIsDialogOpen(false);
-        // Here you would redirect to payment flow or subscription setup
-        alert(`Proceeding with ${selectedPlan}. Payment flow would be implemented here.`);
+    const handleConfirmSelection = async () => {
+        if (!selectedPlan) return;
+        
+        setIsProcessing(true);
+        setError(null);
+        
+        try {
+            // Handle Free Trial separately
+            if (selectedPlan === 'Free Trial') {
+                logDevInfo('Starting free trial');
+                setIsDialogOpen(false);
+                // Navigate back to dashboard to start using the free trial
+                return;
+            }
+            
+            const user = await supabase.auth.getUser();
+            if (!user.data.user) {
+                throw new Error('User not authenticated');
+            }
+            
+            const successUrl = window.location.origin + '?session_id=test_session_' + Date.now();
+            const productPriceIdMap = {
+                'One Time Only': import.meta.env.VITE_POLAR_PRICE_ONE_TIME || 'price_one_time',
+                'Starter': import.meta.env.VITE_POLAR_PRICE_STARTER || 'price_starter',
+                'Pro': import.meta.env.VITE_POLAR_PRICE_PRO || 'price_pro',
+                'Enterprise': import.meta.env.VITE_POLAR_PRICE_ENTERPRISE || 'price_enterprise',
+            };
+            
+            const productPriceId = productPriceIdMap[selectedPlan];
+            if (!productPriceId) {
+                throw new Error(`Product price ID not configured for plan: ${selectedPlan}`);
+            }
+            
+            logDevInfo('Creating checkout session', {
+                plan: selectedPlan,
+                priceId: productPriceId,
+                email: user.data.user.email,
+                successUrl
+            });
+            
+            const checkoutSession = await polarService.createCheckoutSession({
+                product_price_id: productPriceId,
+                success_url: successUrl,
+                customer_email: user.data.user.email || '',
+                customer_name: user.data.user.user_metadata?.full_name || 'Easy Minutes User',
+                metadata: {
+                    plan_name: selectedPlan,
+                    user_id: user.data.user.id,
+                    environment: isSandboxMode() ? 'sandbox' : 'production',
+                }
+            });
+            
+            logDevInfo('Checkout session created', checkoutSession);
+            
+            // Redirect to Polar checkout
+            window.location.href = checkoutSession.url;
+            
+        } catch (error) {
+            console.error('Error creating checkout session:', error);
+            const errorMessage = error instanceof Error ? error.message : 'Failed to initiate payment process';
+            setError(errorMessage);
+            
+            if (isSandboxMode()) {
+                console.log('🚨 Sandbox Error Details:', {
+                    error,
+                    environment: import.meta.env.VITE_POLAR_ENVIRONMENT,
+                    accessToken: import.meta.env.VITE_POLAR_ACCESS_TOKEN ? 'Present' : 'Missing',
+                    orgId: import.meta.env.VITE_POLAR_ORGANIZATION_ID ? 'Present' : 'Missing'
+                });
+            }
+        } finally {
+            setIsProcessing(false);
+        }
     };
 
     return (
@@ -359,6 +441,35 @@ const PricingPage: React.FC = () => {
                         </div>
                     )}
                     
+                    {/* Error Display */}
+                    {error && (
+                        <Alert className="border-destructive">
+                            <AlertDescription className="text-destructive">
+                                {error}
+                                {isSandboxMode() && (
+                                    <div className="mt-2 text-xs text-muted-foreground">
+                                        💡 Running in sandbox mode - check console for detailed error info
+                                    </div>
+                                )}
+                            </AlertDescription>
+                        </Alert>
+                    )}
+                    
+                    {/* Sandbox Test Card Info */}
+                    {isSandboxMode() && selectedPlan !== 'Free Trial' && (
+                        <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                            <div className="flex items-start">
+                                <div className="text-blue-600 text-xs font-medium mb-1">🧪 SANDBOX MODE</div>
+                            </div>
+                            <p className="text-xs text-blue-700 mb-2">
+                                Use test card: <code className="bg-blue-100 px-1 rounded">4242 4242 4242 4242</code>
+                            </p>
+                            <p className="text-xs text-blue-600">
+                                Any future date and any 3-digit CVC will work.
+                            </p>
+                        </div>
+                    )}
+                    
                     <DialogFooter className="flex gap-2">
                         <Button 
                             variant="outline" 
@@ -369,9 +480,11 @@ const PricingPage: React.FC = () => {
                         </Button>
                         <Button 
                             onClick={handleConfirmSelection}
+                            disabled={isProcessing}
                             className="flex-1 bg-primary hover:bg-primary/90 text-primary-foreground"
                         >
-                            {selectedPlan === 'Free Trial' ? 'Start Free Trial' : 'Continue to Payment'}
+                            {isProcessing && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                            {selectedPlan === 'Free Trial' ? 'Start Free Trial' : isProcessing ? 'Processing...' : 'Continue to Payment'}
                         </Button>
                     </DialogFooter>
                 </DialogContent>

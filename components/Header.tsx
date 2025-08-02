@@ -1,13 +1,18 @@
 import React, { useState } from 'react';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuGroup, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { Switch } from '@/components/ui/switch';
+import UserAvatar from './UserAvatar';
+import { useTheme } from '../contexts/ThemeContext';
 import type { Session } from '@supabase/supabase-js';
 import { supabase } from '../services/dbService';
 import { LogoIcon, SpinnerIcon, CheckCircleIcon } from '../constants';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
+import { isSandboxMode } from '../config/polar-dev';
 
 interface HeaderProps {
-    currentView: 'dashboard' | 'allMeetings' | 'pricing';
-    onNavigate: (view: 'dashboard' | 'allMeetings' | 'pricing') => void;
+    currentView: 'dashboard' | 'allMeetings' | 'pricing' | 'success' | 'profile' | 'settings';
+    onNavigate: (view: 'dashboard' | 'allMeetings' | 'pricing' | 'success' | 'profile' | 'settings') => void;
     session: Session | null;
     savingStatus?: {
         isAutoSaving: boolean;
@@ -18,7 +23,8 @@ interface HeaderProps {
 
 const Header: React.FC<HeaderProps> = ({ currentView, onNavigate, session, savingStatus }) => {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
-    
+    const { theme, setTheme, actualTheme } = useTheme();
+
     const handleLogout = async () => {
         await supabase.auth.signOut();
     };
@@ -43,7 +49,14 @@ const Header: React.FC<HeaderProps> = ({ currentView, onNavigate, session, savin
     };
 
     return (
-        <header className="bg-background/80 backdrop-blur-sm sticky top-0 z-20 border-b border-border">
+        <>
+            {/* Sandbox Banner */}
+            {isSandboxMode() && (
+                <div className="bg-amber-100 border-b border-amber-200 text-amber-800 text-center py-2 px-4 text-sm font-medium">
+                    🧪 SANDBOX MODE - Test payments only • Use card 4242 4242 4242 4242
+                </div>
+            )}
+            <header className="bg-background/80 backdrop-blur-sm sticky top-0 z-20 border-b border-border">
             <div className="container mx-auto px-4 sm:px-6 lg:px-8">
                 <div className="flex items-center justify-between h-14 sm:h-16">
                     <div className="flex items-center space-x-2 sm:space-x-3 min-w-0">
@@ -83,18 +96,14 @@ const Header: React.FC<HeaderProps> = ({ currentView, onNavigate, session, savin
                             </Button>
                         </nav>
                         
-                        {/* Desktop Logout */}
+                        {/* User Avatar */}
                         {session && (
-                            <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={handleLogout}
-                                className="hidden lg:flex text-sm px-3 py-2"
-                            >
-                                Logout
-                            </Button>
+                            <UserAvatar 
+                                size="md"
+                                onProfileClick={() => onNavigate('profile')}
+                                onSettingsClick={() => onNavigate('settings')}
+                            />
                         )}
-                        
                         {/* Mobile/Tablet Hamburger Menu */}
                         <Sheet open={isMenuOpen} onOpenChange={setIsMenuOpen}>
                             <SheetTrigger asChild>
@@ -178,6 +187,7 @@ const Header: React.FC<HeaderProps> = ({ currentView, onNavigate, session, savin
                 </div>
             </div>
         </header>
+        </>
     );
 };
 
