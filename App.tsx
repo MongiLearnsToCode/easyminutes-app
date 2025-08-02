@@ -6,13 +6,19 @@ import { supabase } from './services/dbService';
 import Header from './components/Header';
 import Dashboard from './components/Dashboard';
 import AllMeetingsPage from './components/AllMeetingsPage';
+import PricingPage from './components/PricingPage';
 import { LogoIcon } from './constants';
 
 const App: React.FC = () => {
     const [session, setSession] = useState<Session | null>(null);
-    const [view, setView] = useState<'dashboard' | 'allMeetings'>('dashboard');
+    const [view, setView] = useState<'dashboard' | 'allMeetings' | 'pricing'>('dashboard');
     const [selectedMeetingId, setSelectedMeetingId] = useState<string | null>(null);
     const [loading, setLoading] = useState(true);
+    const [savingStatus, setSavingStatus] = useState<{
+        isAutoSaving: boolean;
+        hasUnsavedChanges: boolean;
+        currentSummary: any;
+    } | undefined>(undefined);
 
     useEffect(() => {
         const getSession = async () => {
@@ -29,7 +35,7 @@ const App: React.FC = () => {
         return () => subscription.unsubscribe();
     }, []);
 
-    const handleNavigate = (targetView: 'dashboard' | 'allMeetings') => {
+    const handleNavigate = (targetView: 'dashboard' | 'allMeetings' | 'pricing') => {
         setSelectedMeetingId(null);
         setView(targetView);
     };
@@ -75,9 +81,10 @@ const App: React.FC = () => {
 
     return (
         <div className="min-h-screen bg-brand-bg font-sans text-brand-secondary">
-            <Header currentView={view} onNavigate={handleNavigate} session={session} />
-            {view === 'dashboard' && <Dashboard onShowAll={() => handleNavigate('allMeetings')} selectedMeetingId={selectedMeetingId} />}
+            <Header currentView={view} onNavigate={handleNavigate} session={session} savingStatus={savingStatus} />
+            {view === 'dashboard' && <Dashboard onShowAll={() => handleNavigate('allMeetings')} selectedMeetingId={selectedMeetingId} onSavingStatusChange={setSavingStatus} />}
             {view === 'allMeetings' && <AllMeetingsPage onSelectMeeting={handleSelectMeetingFromAll} onBack={() => handleNavigate('dashboard')} />}
+            {view === 'pricing' && <PricingPage />}
         </div>
     );
 }

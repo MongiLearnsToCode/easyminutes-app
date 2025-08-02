@@ -17,17 +17,30 @@ const getCurrentUser = async (): Promise<User> => {
 // This is the data structure expected from the Gemini service.
 type MeetingData = Omit<MeetingSummary, 'id' | 'createdAt' | 'userId'>;
 
+// Database row type
+type MeetingRow = {
+    id: string;
+    created_at: string;
+    title: string;
+    attendees: string[];
+    summary: string;
+    key_points?: string[];
+    action_items?: any[];
+    decisions?: string[];
+    user_id: string;
+    updated_at?: string;
+};
+
 // Convert database row to MeetingSummary interface
 const dbRowToMeetingSummary = (row: any): MeetingSummary => {
-    console.log('Database row structure:', Object.keys(row)); // Debug log to see actual column names
     return {
         id: row.id,
         createdAt: row.created_at || row.createdAt,
         title: row.title,
         attendees: row.attendees || [],
         summary: row.summary || '',
-        keyPoints: row.keyPoints || row.key_points || row.keypoints || [],
-        actionItems: row.actionItems || row.action_items || row.actionitems || [],
+        keyPoints: row.key_points || row.keyPoints || [],
+        actionItems: row.action_items || row.actionItems || [],
         decisions: row.decisions || []
     };
 };
@@ -75,22 +88,17 @@ export const getAllMinutes = async (): Promise<MeetingSummary[]> => {
 
 export const updateMinute = async (summary: MeetingSummary): Promise<MeetingSummary> => {
     const user = await getCurrentUser();
-    const { id, title, attendees, summary: summaryText, keyPoints, actionItems, decisions, createdAt } = summary;
-    
-    // Package extended data as JSON in summary field
-    const extendedSummary = {
-        summary: summaryText,
-        keyPoints: keyPoints,
-        actionItems: actionItems,
-        decisions: decisions
-    };
+    const { id, title, attendees, summary: summaryText, keyPoints, actionItems, decisions } = summary;
     
     const { data, error } = await supabase
         .from('meetings')
         .update({
             title,
             attendees,
-            summary: JSON.stringify(extendedSummary),
+            summary: summaryText,
+            key_points: keyPoints,
+            action_items: actionItems,
+            decisions,
             updated_at: new Date().toISOString()
         })
         .eq('id', id)

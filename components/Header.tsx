@@ -1,35 +1,38 @@
 import React from 'react';
 import type { Session } from '@supabase/supabase-js';
 import { supabase } from '../services/dbService';
-import { LogoIcon } from '../constants';
+import { LogoIcon, SpinnerIcon, CheckCircleIcon } from '../constants';
+import { Button } from '@/components/ui/button';
 
 interface HeaderProps {
-    currentView: 'dashboard' | 'allMeetings';
-    onNavigate: (view: 'dashboard' | 'allMeetings') => void;
+    currentView: 'dashboard' | 'allMeetings' | 'pricing';
+    onNavigate: (view: 'dashboard' | 'allMeetings' | 'pricing') => void;
     session: Session | null;
+    savingStatus?: {
+        isAutoSaving: boolean;
+        hasUnsavedChanges: boolean;
+        currentSummary: any;
+    };
 }
 
-const NavLink: React.FC<{
-    isActive: boolean;
-    onClick: () => void;
-    children: React.ReactNode;
-}> = ({ isActive, onClick, children }) => {
-    const activeClasses = "bg-brand-primary/10 text-brand-primary";
-    const inactiveClasses = "text-brand-muted hover:bg-gray-100";
-    return (
-        <button
-            onClick={onClick}
-            className={`px-4 py-2 rounded-lg font-semibold transition-colors duration-200 ${isActive ? activeClasses : inactiveClasses}`}
-        >
-            {children}
-        </button>
-    );
-};
-
-const Header: React.FC<HeaderProps> = ({ currentView, onNavigate, session }) => {
+const Header: React.FC<HeaderProps> = ({ currentView, onNavigate, session, savingStatus }) => {
     
     const handleLogout = async () => {
         await supabase.auth.signOut();
+    };
+
+    const SavingStatus = () => {
+        if (!savingStatus?.currentSummary) return null;
+
+        if (savingStatus.isAutoSaving) {
+            return <div className="flex items-center text-sm text-brand-muted"><SpinnerIcon className="text-brand-primary"/> <span className="ml-2">Saving...</span></div>
+        }
+
+        if (!savingStatus.hasUnsavedChanges) {
+            return <div className="flex items-center text-sm text-green-600"><CheckCircleIcon className="w-5 h-5"/> <span className="ml-1">All changes saved</span></div>
+        }
+
+        return null;
     };
 
     return (
@@ -41,27 +44,38 @@ const Header: React.FC<HeaderProps> = ({ currentView, onNavigate, session }) => 
                         <h1 className="text-xl font-bold text-brand-secondary">Easy Minutes</h1>
                     </div>
                     <div className="flex items-center space-x-4">
+                        <SavingStatus />
                         <nav className="flex items-center space-x-2">
-                            <NavLink
-                                isActive={currentView === 'dashboard'}
+                            <Button
+                                variant={currentView === 'dashboard' ? 'default' : 'ghost'}
+                                size="sm"
                                 onClick={() => onNavigate('dashboard')}
                             >
                                 Dashboard
-                            </NavLink>
-                            <NavLink
-                                isActive={currentView === 'allMeetings'}
+                            </Button>
+                            <Button
+                                variant={currentView === 'allMeetings' ? 'default' : 'ghost'}
+                                size="sm"
                                 onClick={() => onNavigate('allMeetings')}
                             >
                                 All Meetings
-                            </NavLink>
+                            </Button>
+                            <Button
+                                variant={currentView === 'pricing' ? 'default' : 'ghost'}
+                                size="sm"
+                                onClick={() => onNavigate('pricing')}
+                            >
+                                Pricing
+                            </Button>
                         </nav>
                         {session && (
-                             <button
+                            <Button
+                                variant="outline"
+                                size="sm"
                                 onClick={handleLogout}
-                                className="px-3 py-1.5 text-sm rounded-lg font-semibold transition-colors duration-200 text-brand-muted bg-gray-100 hover:bg-gray-200"
                             >
                                 Logout
-                            </button>
+                            </Button>
                         )}
                     </div>
                 </div>

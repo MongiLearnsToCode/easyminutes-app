@@ -11,6 +11,15 @@ import * as mammoth from 'mammoth';
 import DOMPurify from 'dompurify';
 import { InputValidator } from '../security-fixes/inputValidation';
 import { SecureFileUpload } from '../security-fixes/secureFileUpload';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Badge } from '@/components/ui/badge';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Skeleton } from '@/components/ui/skeleton';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 
 type ActiveTab = 'text' | 'voice' | 'upload';
 
@@ -21,13 +30,15 @@ const SectionHeader: React.FC<{ children: React.ReactNode }> = ({ children }) =>
 );
 
 const AddItemButton: React.FC<{ onClick: () => void; children: React.ReactNode }> = ({ onClick, children }) => (
-    <button
+    <Button
         onClick={onClick}
-        className="flex items-center space-x-2 text-sm font-medium text-brand-primary hover:text-opacity-80 transition-colors mt-3 ml-1"
+        variant="ghost"
+        size="sm"
+        className="flex items-center space-x-2 text-sm font-medium text-brand-primary hover:text-opacity-80 transition-colors mt-3 ml-1 h-auto p-1"
     >
         <PlusIcon className="w-4 h-4" />
         <span>{children}</span>
-    </button>
+    </Button>
 );
 
 const EditableMinutesDisplay: React.FC<{ summary: MeetingSummary; setSummary: React.Dispatch<React.SetStateAction<MeetingSummary | null>> }> = ({ summary, setSummary }) => {
@@ -86,10 +97,10 @@ const EditableMinutesDisplay: React.FC<{ summary: MeetingSummary; setSummary: Re
                 <h4 className="text-sm font-bold text-brand-muted uppercase tracking-wider mb-4 pb-2 border-b border-gray-200/80">
                     Summary
                 </h4>
-                <textarea
+                <Textarea
                     value={sanitizedSummary.summary}
                     onChange={(e) => updateSummary({ summary: e.target.value })}
-                    className="w-full bg-brand-bg/80 rounded-r-md p-4 text-base text-brand-muted leading-relaxed border-l-4 border-brand-primary/50 focus:ring-1 focus:ring-brand-primary/50 focus:border-brand-primary/50 transition duration-200 resize-none"
+                    className="bg-brand-bg/80 border-l-4 border-brand-primary/50 focus:border-brand-primary/50 resize-none"
                     placeholder="Meeting summary..."
                     rows={4}
                 />
@@ -124,7 +135,7 @@ const EditableMinutesDisplay: React.FC<{ summary: MeetingSummary; setSummary: Re
                         <ul className="space-y-3">
                             {sanitizedSummary[section].map((item, index) => 
                                 <li key={index} className="flex items-start group text-brand-secondary/90 leading-relaxed">
-                                    <span className="text-brand-primary font-bold text-lg mr-3 mt-0.5">&#8226;</span>
+                                    <span className="text-brand-primary font-bold text-lg mr-3 mt-0.5">•</span>
                                     <input
                                         value={item}
                                         onChange={(e) => handleListChange(section, index, e.target.value)}
@@ -177,7 +188,7 @@ const EditableMinutesDisplay: React.FC<{ summary: MeetingSummary; setSummary: Re
     );
 };
 
-const Dashboard: React.FC<{ onShowAll: () => void; selectedMeetingId: string | null }> = ({ onShowAll, selectedMeetingId }) => {
+const Dashboard: React.FC<{ onShowAll: () => void; selectedMeetingId: string | null; onSavingStatusChange: (status: { isAutoSaving: boolean; hasUnsavedChanges: boolean; currentSummary: any; } | undefined) => void; }> = ({ onShowAll, selectedMeetingId, onSavingStatusChange }) => {
     const [activeTab, setActiveTab] = useState<ActiveTab>('text');
     const [inputText, setInputText] = useState('');
     const [transcript, setTranscript] = useState('');
@@ -196,12 +207,10 @@ const Dashboard: React.FC<{ onShowAll: () => void; selectedMeetingId: string | n
     const [isProcessingFile, setIsProcessingFile] = useState(false);
     const [isDragging, setIsDragging] = useState(false);
     const [isAutoSaving, setIsAutoSaving] = useState(false);
-    const [isShareMenuOpen, setShareMenuOpen] = useState(false);
     const [copyStatusText, setCopyStatusText] = useState('Copy to Clipboard');
     
     const recognitionRef = useRef<SpeechRecognition | null>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
-    const shareMenuRef = useRef<HTMLDivElement>(null);
     const textareaRef = useRef<HTMLTextAreaElement>(null);
 
 
@@ -229,47 +238,44 @@ const Dashboard: React.FC<{ onShowAll: () => void; selectedMeetingId: string | n
         }
     }, [inputText]);
 
-    useEffect(() => {
-        const handleClickOutside = (event: MouseEvent) => {
-            if (shareMenuRef.current && !shareMenuRef.current.contains(event.target as Node)) {
-                setShareMenuOpen(false);
-            }
-        };
-        document.addEventListener("mousedown", handleClickOutside);
-        return () => {
-            document.removeEventListener("mousedown", handleClickOutside);
-        };
-    }, [shareMenuRef]);
     
     const formatSummaryAsText = (summary: MeetingSummary): string => {
         if (!summary) return '';
         const sections = [
-            `Title: ${summary.title}`,
-            `Date: ${new Date(summary.createdAt).toLocaleString()}`,
+            `MEETING: ${summary.title}`,
+            `DATE: ${new Date(summary.createdAt).toLocaleDateString('en-US', { 
+                weekday: 'long', 
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric' 
+            })}`,
             '',
             'SUMMARY',
-            '--------------------',
+            '═══════════════════════════════════════════════════════════════',
             summary.summary,
             '',
             'ATTENDEES',
-            '--------------------',
-            summary.attendees.map(a => `- ${a}`).join('\n'),
+            '═══════════════════════════════════════════════════════════════',
+            summary.attendees.map(a => `• ${a}`).join('\n'),
             '',
             'KEY POINTS',
-            '--------------------',
-            summary.keyPoints.map(p => `- ${p}`).join('\n'),
+            '═══════════════════════════════════════════════════════════════',
+            summary.keyPoints.map(p => `• ${p}`).join('\n'),
             '',
             ...(summary.decisions && summary.decisions.length > 0 ? [
                 'DECISIONS MADE',
-                '--------------------',
-                summary.decisions.map(d => `- ${d}`).join('\n'),
+                '═══════════════════════════════════════════════════════════════',
+                summary.decisions.map(d => `• ${d}`).join('\n'),
                 '',
             ] : []),
             'ACTION ITEMS',
-            '--------------------',
-            summary.actionItems.map(item => `- ${item.task} (Owner: ${item.owner})`).join('\n')
+            '═══════════════════════════════════════════════════════════════',
+            summary.actionItems.map((item, index) => {
+                const taskNumber = (index + 1).toString().padStart(2, '0');
+                return `${taskNumber}. ${item.task}${item.owner ? ` [Assigned: ${item.owner}]` : ''}`;
+            }).join('\n')
         ];
-        return sections.join('\n');
+        return sections.filter(section => section !== undefined).join('\n');
     };
 
     const handleCopyToClipboard = useCallback((summary: MeetingSummary) => {
@@ -279,7 +285,6 @@ const Dashboard: React.FC<{ onShowAll: () => void; selectedMeetingId: string | n
             setCopyStatusText('Copied!');
             setTimeout(() => {
                 setCopyStatusText('Copy to Clipboard');
-                setShareMenuOpen(false);
             }, 1500);
         }).catch(err => {
             console.error('Failed to copy text: ', err);
@@ -296,12 +301,10 @@ const Dashboard: React.FC<{ onShowAll: () => void; selectedMeetingId: string | n
         const body = formatSummaryAsText(summary);
         const mailtoLink = `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
         window.location.href = mailtoLink;
-        setShareMenuOpen(false);
     }, []);
 
     const handleExportDocx = useCallback((summary: MeetingSummary) => {
         if (!summary) return;
-        setShareMenuOpen(false);
         const doc = new Document({
             creator: "Easy Minutes",
             title: summary.title,
@@ -355,7 +358,6 @@ const Dashboard: React.FC<{ onShowAll: () => void; selectedMeetingId: string | n
 
     const handleExportPdf = useCallback((summary: MeetingSummary) => {
         if (!summary) return;
-        setShareMenuOpen(false);
         const doc = new jsPDF();
         const pageWidth = doc.internal.pageSize.getWidth();
         const margin = 15;
@@ -623,6 +625,15 @@ const Dashboard: React.FC<{ onShowAll: () => void; selectedMeetingId: string | n
         };
     }, [currentSummary, hasUnsavedChanges, loadMinutesFromDB]);
     
+    // Pass saving status to parent
+    useEffect(() => {
+        onSavingStatusChange(currentSummary ? {
+            isAutoSaving,
+            hasUnsavedChanges,
+            currentSummary
+        } : undefined);
+    }, [currentSummary, isAutoSaving, hasUnsavedChanges, onSavingStatusChange]);
+    
     useEffect(() => {
         if (selectedMeetingId && savedMinutes.length > 0) {
             const minuteToSelect = savedMinutes.find(m => m.id === selectedMeetingId);
@@ -679,19 +690,6 @@ const Dashboard: React.FC<{ onShowAll: () => void; selectedMeetingId: string | n
                 : 'text-brand-muted hover:bg-gray-200'
         }`;
         
-    const SavingStatus = () => {
-        if (!currentSummary) return null;
-
-        if (isAutoSaving) {
-            return <div className="flex items-center text-sm text-brand-muted"><SpinnerIcon className="text-brand-primary"/> <span className="ml-2">Saving...</span></div>
-        }
-
-        if (!hasUnsavedChanges) {
-            return <div className="flex items-center text-sm text-green-600"><CheckCircleIcon className="w-5 h-5"/> <span className="ml-1">All changes saved</span></div>
-        }
-
-        return null;
-    };
 
     return (
         <main className="container mx-auto p-4 sm:p-6 lg:p-8">
@@ -700,24 +698,117 @@ const Dashboard: React.FC<{ onShowAll: () => void; selectedMeetingId: string | n
                 <div className="lg:col-span-2 bg-brand-surface p-6 rounded-2xl shadow-sm flex flex-col space-y-6">
                     <div>
                         <h2 className="text-2xl font-bold text-brand-secondary mb-4">Meeting Notes</h2>
-                        <div className="flex space-x-2 mb-4 p-1 bg-gray-100 rounded-xl">
-                            {/* ...Tabs... */}
-                            <div className={tabClasses('text')} onClick={() => setActiveTab('text')}><TextIcon className="w-5 h-5" /><span>Text</span></div>
-                            <div className={tabClasses('voice')} onClick={() => setActiveTab('voice')}><MicIcon className="w-5 h-5" /><span>Voice</span></div>
-                            <div className={tabClasses('upload')} onClick={() => setActiveTab('upload')}><UploadIcon className="w-5 h-5" /><span>Upload</span></div>
-                        </div>
-                        
-                        <div>
-                            {/* ... Tab content ... */}
-                             {activeTab === 'text' && <textarea ref={textareaRef} value={inputText} onChange={(e) => setInputText(e.target.value)} placeholder="Paste your meeting notes or raw text here..." className="w-full p-4 border border-gray-200 rounded-lg focus:ring-2 focus:ring-brand-primary/50 focus:border-brand-primary/50 transition duration-200 resize-none overflow-y-hidden" rows={5} />}
-                             {activeTab === 'voice' && <div className="flex flex-col min-h-[300px]"><button onClick={toggleRecording} className={`flex items-center justify-center space-x-2 w-full py-3 rounded-lg font-semibold text-white transition-colors duration-200 ${isRecording ? 'bg-red-600 hover:bg-red-700' : 'bg-green-500 hover:bg-green-600'}`}><MicIcon className="w-5 h-5" /><span>{isRecording ? 'Stop Recording' : 'Start Recording'}</span></button><div className="flex-grow mt-4 p-4 border border-gray-200 rounded-lg overflow-y-auto bg-gray-50"><p className="text-brand-muted whitespace-pre-wrap">{transcript || 'Your live transcription will appear here...'}</p>{isRecording && <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse mt-2"></div>}</div></div>}
-                             {activeTab === 'upload' && <div onDragOver={handleDragOver} onDragLeave={handleDragLeave} onDrop={handleDrop} className={`relative flex flex-col items-center justify-center w-full min-h-[300px] border-2 border-dashed rounded-lg cursor-pointer transition-colors duration-200 ${isDragging ? 'border-brand-primary bg-brand-primary/10' : 'border-gray-300 bg-gray-50 hover:bg-gray-100'}`}><input ref={fileInputRef} type="file" className="hidden" onChange={(e) => handleFileSelect(e.target.files)} accept=".txt,.md,.docx,audio/*"/>{isProcessingFile ? <div className="flex flex-col items-center"><SpinnerIcon className="text-brand-primary" /><p className="mt-2 text-brand-muted">Processing file...</p></div> : uploadedFile ? <div className="text-center p-4">{audioInput ? <FileAudioIcon className="w-16 h-16 mx-auto text-brand-primary/80" /> : <FileTextIcon className="w-16 h-16 mx-auto text-brand-primary/80" />}<p className="font-semibold text-brand-secondary mt-2 truncate">{uploadedFile.name}</p><p className="text-sm text-brand-muted">{Math.round(uploadedFile.size / 1024)} KB</p><button onClick={() => setUploadedFile(null)} className="mt-4 text-sm font-semibold text-red-600 hover:text-red-800">Remove File</button></div> : <div className="text-center" onClick={() => fileInputRef.current?.click()}><UploadIcon className="w-12 h-12 mx-auto text-gray-400"/><p className="mt-2 font-semibold text-brand-secondary">Drag & drop a file here</p><p className="text-sm text-brand-muted">or click to browse</p><p className="text-xs text-gray-400 mt-4">Supports: TXT, DOCX, MP3, WAV, M4A</p></div>}</div>}
-                        </div>
+                        <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as ActiveTab)}>
+                            <TabsList className="grid w-full grid-cols-3">
+                                <TabsTrigger value="text" className="flex items-center space-x-2">
+                                    <TextIcon className="w-4 h-4" />
+                                    <span>Text</span>
+                                </TabsTrigger>
+                                <TabsTrigger value="voice" className="flex items-center space-x-2">
+                                    <MicIcon className="w-4 h-4" />
+                                    <span>Voice</span>
+                                </TabsTrigger>
+                                <TabsTrigger value="upload" className="flex items-center space-x-2">
+                                    <UploadIcon className="w-4 h-4" />
+                                    <span>Upload</span>
+                                </TabsTrigger>
+                            </TabsList>
+                            
+                            <TabsContent value="text">
+                                <Textarea 
+                                    ref={textareaRef} 
+                                    value={inputText} 
+                                    onChange={(e) => setInputText(e.target.value)} 
+                                    placeholder="Paste your meeting notes or raw text here..." 
+                                    className="min-h-[300px] resize-none"
+                                />
+                            </TabsContent>
+                            
+                            <TabsContent value="voice">
+                                <div className="flex flex-col min-h-[300px] space-y-4">
+                                    <Button 
+                                        onClick={toggleRecording} 
+                                        variant={isRecording ? "destructive" : "default"}
+                                        size="lg"
+                                        className="w-full"
+                                    >
+                                        <MicIcon className="w-5 h-5 mr-2" />
+                                        {isRecording ? 'Stop Recording' : 'Start Recording'}
+                                    </Button>
+                                    <div className="flex-grow p-4 border border-gray-200 rounded-lg overflow-y-auto bg-gray-50 min-h-[250px]">
+                                        <p className="text-brand-muted whitespace-pre-wrap">
+                                            {transcript || 'Your live transcription will appear here...'}
+                                        </p>
+                                        {isRecording && <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse mt-2"></div>}
+                                    </div>
+                                </div>
+                            </TabsContent>
+                            
+                            <TabsContent value="upload">
+                                <div 
+                                    onDragOver={handleDragOver} 
+                                    onDragLeave={handleDragLeave} 
+                                    onDrop={handleDrop} 
+                                    className={`relative flex flex-col items-center justify-center w-full min-h-[300px] border-2 border-dashed rounded-lg cursor-pointer transition-colors duration-200 ${
+                                        isDragging ? 'border-brand-primary bg-brand-primary/10' : 'border-gray-300 bg-gray-50 hover:bg-gray-100'
+                                    }`}
+                                >
+                                    <input 
+                                        ref={fileInputRef} 
+                                        type="file" 
+                                        className="hidden" 
+                                        onChange={(e) => handleFileSelect(e.target.files)} 
+                                        accept=".txt,.md,.docx,audio/*"
+                                    />
+                                    {isProcessingFile ? (
+                                        <div className="flex flex-col items-center">
+                                            <SpinnerIcon className="text-brand-primary" />
+                                            <p className="mt-2 text-brand-muted">Processing file...</p>
+                                        </div>
+                                    ) : uploadedFile ? (
+                                        <Card className="w-full max-w-sm">
+                                            <CardContent className="text-center p-4">
+                                                {audioInput ? (
+                                                    <FileAudioIcon className="w-16 h-16 mx-auto text-brand-primary/80 mb-2" />
+                                                ) : (
+                                                    <FileTextIcon className="w-16 h-16 mx-auto text-brand-primary/80 mb-2" />
+                                                )}
+                                                <p className="font-semibold text-brand-secondary truncate">{uploadedFile.name}</p>
+                                                <Badge variant="secondary" className="mt-1">
+                                                    {Math.round(uploadedFile.size / 1024)} KB
+                                                </Badge>
+                                                <Button 
+                                                    onClick={() => setUploadedFile(null)} 
+                                                    variant="destructive" 
+                                                    size="sm" 
+                                                    className="mt-4"
+                                                >
+                                                    Remove File
+                                                </Button>
+                                            </CardContent>
+                                        </Card>
+                                    ) : (
+                                        <div className="text-center" onClick={() => fileInputRef.current?.click()}>
+                                            <UploadIcon className="w-12 h-12 mx-auto text-gray-400 mb-4"/>
+                                            <p className="font-semibold text-brand-secondary mb-2">Drag & drop a file here</p>
+                                            <p className="text-sm text-brand-muted mb-4">or click to browse</p>
+                                            <Badge variant="outline">Supports: TXT, DOCX, MP3, WAV, M4A</Badge>
+                                        </div>
+                                    )}
+                                </div>
+                            </TabsContent>
+                        </Tabs>
                         
                         <div className="mt-6">
-                            <button onClick={handleGenerate} disabled={isLoading || isProcessingFile} className="w-full py-3 px-4 bg-brand-primary text-white font-bold rounded-lg shadow-md hover:bg-opacity-90 transition-all duration-200 disabled:bg-brand-muted disabled:cursor-not-allowed flex items-center justify-center">
-                                {isLoading ? <SpinnerIcon /> : 'Generate Minutes'}
-                            </button>
+                            <Button 
+                                onClick={handleGenerate} 
+                                disabled={isLoading || isProcessingFile} 
+                                size="lg" 
+                                className="w-full"
+                            >
+                                {isLoading ? <SpinnerIcon className="mr-2" /> : null}
+                                Generate Minutes
+                            </Button>
                         </div>
                     </div>
                     
@@ -729,7 +820,13 @@ const Dashboard: React.FC<{ onShowAll: () => void; selectedMeetingId: string | n
                             </button>
                         </div>
                         <div className="relative mb-4">
-                            <input type="text" placeholder="Search by title or attendee..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-primary/50"/>
+                            <Input 
+                                type="text" 
+                                placeholder="Search by title or attendee..." 
+                                value={searchTerm} 
+                                onChange={(e) => setSearchTerm(e.target.value)} 
+                                className="pl-10"
+                            />
                             <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400"/>
                         </div>
                         <div className="flex-grow overflow-y-auto -mr-2 pr-2 space-y-2">
@@ -771,61 +868,65 @@ const Dashboard: React.FC<{ onShowAll: () => void; selectedMeetingId: string | n
                           ) : (
                              <h2 className="text-2xl font-bold text-brand-secondary">Summary</h2>
                           )}
-                          <SavingStatus />
                       </div>
                       {currentSummary && !isLoading && (
-                            <div className="relative" ref={shareMenuRef}>
+                            <div className="flex items-center space-x-2">
                                 <button
-                                    onClick={() => setShareMenuOpen(v => !v)}
-                                    className="flex items-center space-x-2 px-4 py-2 text-sm font-semibold text-brand-secondary bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors shadow-sm"
-                                    aria-haspopup="true"
-                                    aria-expanded={isShareMenuOpen}
+                                    onClick={() => handleCopyToClipboard(currentSummary!)}
+                                    className="flex items-center space-x-1 px-3 py-2 text-sm font-medium text-brand-secondary bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
+                                    title={copyStatusText}
                                 >
-                                    <ArrowUpTrayIcon className="w-5 h-5" />
-                                    <span>Share / Export</span>
+                                    <DocumentDuplicateIcon className="w-4 h-4" />
+                                    <span className="hidden sm:inline">Copy</span>
                                 </button>
-                                {isShareMenuOpen && (
-                                    <div className="absolute right-0 mt-2 w-56 origin-top-right bg-white divide-y divide-gray-100 rounded-md shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none z-30 animate-fade-in-fast">
-                                        <div className="p-1">
-                                            <button
-                                                onClick={() => handleCopyToClipboard(currentSummary!)}
-                                                className="w-full text-left flex items-center space-x-3 px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-md transition-colors"
-                                            >
-                                                <DocumentDuplicateIcon className="w-5 h-5"/>
-                                                <span>{copyStatusText}</span>
-                                            </button>
-                                            <button
-                                                onClick={() => handleShareByEmail(currentSummary!)}
-                                                className="w-full text-left flex items-center space-x-3 px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-md transition-colors"
-                                            >
-                                                <MailIcon className="w-5 h-5" />
-                                                <span>Share via Email</span>
-                                            </button>
-                                        </div>
-                                        <div className="p-1">
-                                            <button
-                                                onClick={() => handleExportDocx(currentSummary!)}
-                                                className="w-full text-left flex items-center space-x-3 px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-md transition-colors"
-                                            >
-                                                <FileTextIcon className="w-5 h-5 text-blue-600" />
-                                                <span>Export as .docx</span>
-                                            </button>
-                                            <button
-                                                onClick={() => handleExportPdf(currentSummary!)}
-                                                className="w-full text-left flex items-center space-x-3 px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-md transition-colors"
-                                            >
-                                                <FileTextIcon className="w-5 h-5 text-red-600" />
-                                                <span>Export as .pdf</span>
-                                            </button>
-                                        </div>
-                                    </div>
-                                )}
+                                <button
+                                    onClick={() => handleShareByEmail(currentSummary!)}
+                                    className="flex items-center space-x-1 px-3 py-2 text-sm font-medium text-brand-secondary bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
+                                    title="Share via Email"
+                                >
+                                    <MailIcon className="w-4 h-4" />
+                                    <span className="hidden sm:inline">Email</span>
+                                </button>
+                                <DropdownMenu>
+                                    <DropdownMenuTrigger asChild>
+                                        <button
+                                            className="flex items-center space-x-1 px-3 py-2 text-sm font-medium text-brand-secondary bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
+                                            title="Export Options"
+                                        >
+                                            <ArrowUpTrayIcon className="w-4 h-4" />
+                                            <span className="hidden sm:inline">Export</span>
+                                        </button>
+                                    </DropdownMenuTrigger>
+                                    <DropdownMenuContent align="end" className="w-48">
+                                        <DropdownMenuItem onSelect={() => handleExportDocx(currentSummary!)}>
+                                            <FileTextIcon className="w-4 h-4 text-blue-600 mr-2" />
+                                            Export as .docx
+                                        </DropdownMenuItem>
+                                        <DropdownMenuItem onSelect={() => handleExportPdf(currentSummary!)}>
+                                            <FileTextIcon className="w-4 h-4 text-red-600 mr-2" />
+                                            Export as .pdf
+                                        </DropdownMenuItem>
+                                    </DropdownMenuContent>
+                                </DropdownMenu>
                             </div>
                         )}
                     </div>
                     <div className="min-h-[400px] p-4 bg-brand-bg/50 rounded-lg">
-                        {isLoading && <div className="animate-pulse space-y-4"><div className="h-8 bg-gray-200 rounded w-3/4"></div><div className="h-20 bg-gray-200 rounded w-full mt-6"></div><div className="h-6 bg-gray-200 rounded w-1/3 mt-6"></div><div className="h-4 bg-gray-200 rounded w-full"></div><div className="h-4 bg-gray-200 rounded w-5/6"></div><div className="h-4 bg-gray-200 rounded w-full"></div></div>}
-                        {error && <div className="text-red-600 bg-red-100 p-4 rounded-lg">{error}</div>}
+                        {isLoading && (
+                            <div className="space-y-4">
+                                <Skeleton className="h-8 w-3/4" />
+                                <Skeleton className="h-20 w-full" />
+                                <Skeleton className="h-6 w-1/3" />
+                                <Skeleton className="h-4 w-full" />
+                                <Skeleton className="h-4 w-5/6" />
+                                <Skeleton className="h-4 w-full" />
+                            </div>
+                        )}
+                        {error && (
+                            <Alert variant="destructive">
+                                <AlertDescription>{error}</AlertDescription>
+                            </Alert>
+                        )}
                         {currentSummary && !isLoading && <EditableMinutesDisplay summary={currentSummary} setSummary={setCurrentSummary} />}
                         {!isLoading && !error && !currentSummary && (
                             <div className="text-center text-brand-muted pt-16">

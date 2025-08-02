@@ -2,6 +2,10 @@ import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { MeetingSummary } from '../types';
 import { getAllMinutes, deleteMinute } from '../services/dbService';
 import { SearchIcon, TrashIcon, ArrowLeftIcon, HistoryIcon, FileTextIcon, ViewGridIcon, ViewListIcon } from '../constants';
+import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Input } from '@/components/ui/input';
 import DOMPurify from 'dompurify';
 
 type Layout = 'list' | 'grid';
