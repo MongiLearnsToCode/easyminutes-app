@@ -110,32 +110,32 @@ const PricingPage: React.FC = () => {
     };
 
     return (
-        <div className="min-h-screen bg-background py-12 px-4 sm:px-6 lg:px-8">
+        <div className="min-h-screen bg-background py-6 sm:py-8 md:py-12 px-3 sm:px-4 md:px-6 lg:px-8">
             <div className="max-w-7xl mx-auto">
                 {/* Header Section */}
-                <div className="text-center mb-16">
+                <div className="text-center mb-12 sm:mb-16">
                     <div className="text-center mb-6">
-                        <h1 className="text-4xl font-bold text-foreground">
+                        <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-foreground leading-tight">
                             Choose Your Plan
                         </h1>
                     </div>
-                    <p className="text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed">
+                    <p className="text-lg sm:text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed px-2">
                         Transform your meetings with AI-powered minutes. Start with one free meeting, 
                         then choose the plan that fits your team's needs.
                     </p>
                     
                     {/* Free Trial Highlight */}
-                    <div className="mt-12 mb-4">
-                        <div className="bg-gradient-to-r from-primary/10 via-primary/5 to-primary/10 border border-primary/20 rounded-xl py-8 px-6 text-center">
-                            <div className="flex items-center justify-center mb-4">
-                                <div className="bg-primary/10 rounded-full p-3 mr-4">
-                                    <CheckCircleIcon className="h-8 w-8 text-primary" />
+                    <div className="mt-8 sm:mt-12 mb-4">
+                        <div className="bg-gradient-to-r from-primary/10 via-primary/5 to-primary/10 border border-primary/20 rounded-xl py-6 sm:py-8 px-4 sm:px-6 text-center">
+                            <div className="flex flex-col sm:flex-row items-center justify-center mb-4 gap-3 sm:gap-0">
+                                <div className="bg-primary/10 rounded-full p-3 sm:mr-4 flex-shrink-0">
+                                    <CheckCircleIcon className="h-6 w-6 sm:h-8 sm:w-8 text-primary" />
                                 </div>
                                 <div>
-                                    <h3 className="text-2xl font-bold text-primary mb-1">
+                                    <h3 className="text-xl sm:text-2xl font-bold text-primary mb-1 leading-tight">
                                         Try 1 Meeting Absolutely Free
                                     </h3>
-                                    <p className="text-muted-foreground text-base">
+                                    <p className="text-muted-foreground text-sm sm:text-base">
                                         Full features unlocked after subscription
                                     </p>
                                 </div>

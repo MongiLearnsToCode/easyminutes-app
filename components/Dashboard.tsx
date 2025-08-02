@@ -702,10 +702,10 @@ const Dashboard: React.FC<{ onShowAll: () => void; selectedMeetingId: string | n
         
 
     return (
-        <main className="container mx-auto p-4 sm:p-6 lg:p-8">
-            <div className="grid grid-cols-1 lg:grid-cols-5 gap-8 lg:items-start">
+        <main className="container mx-auto p-2 sm:p-4 md:p-6 lg:p-8 max-w-7xl">
+            <div className="grid grid-cols-1 lg:grid-cols-5 gap-4 sm:gap-6 lg:gap-8 lg:items-start">
                 {/* Left Column */}
-                <div className="lg:col-span-2 bg-card p-6 rounded-2xl shadow-sm flex flex-col space-y-6">
+                <div className="lg:col-span-2 bg-card p-3 sm:p-4 md:p-6 rounded-xl sm:rounded-2xl shadow-sm flex flex-col space-y-4 sm:space-y-6 order-2 lg:order-1">
                     <div>
                         <h2 className="text-2xl font-bold text-foreground mb-4">Meeting Notes</h2>
                         <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as ActiveTab)}>
@@ -906,9 +906,9 @@ const Dashboard: React.FC<{ onShowAll: () => void; selectedMeetingId: string | n
                 </div>
 
                 {/* Right Column */}
-<div className="lg:col-span-3 bg-card p-6 rounded-2xl shadow-sm">
-                    <div className="flex justify-between items-center mb-4 gap-4">
-                      <div className="flex items-center space-x-3 flex-grow min-w-0">
+<div className="lg:col-span-3 bg-card p-3 sm:p-4 md:p-6 rounded-xl sm:rounded-2xl shadow-sm order-1 lg:order-2">
+                    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-3 sm:gap-4">
+                      <div className="flex items-center space-x-3 flex-grow min-w-0 w-full sm:w-auto">
                           {currentSummary ? (
                             <input
                                 value={currentSummary.title}

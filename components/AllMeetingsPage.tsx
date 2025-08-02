@@ -130,8 +130,8 @@ const AllMeetingsPage: React.FC<{
     }, [meetings, searchTerm, sortOption]);
 
     return (
-        <main className="container mx-auto p-4 sm:p-6 lg:p-8 animate-fade-in">
-            <div className="max-w-6xl mx-auto bg-card p-6 sm:p-8 rounded-2xl shadow-sm">
+        <main className="container mx-auto p-2 sm:p-4 md:p-6 lg:p-8 animate-fade-in max-w-7xl">
+            <div className="max-w-6xl mx-auto bg-card p-3 sm:p-4 md:p-6 lg:p-8 rounded-xl sm:rounded-2xl shadow-sm">
                 <div className="flex items-center justify-between mb-6 border-b border-border pb-4">
                     <button onClick={onBack} className="flex items-center space-x-2 text-sm font-semibold text-foreground hover:text-primary transition-colors">
                         <ArrowLeftIcon className="w-5 h-5" />
