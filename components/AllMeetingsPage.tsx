@@ -60,6 +60,7 @@ const AllMeetingsPage: React.FC<{
     const [sortOption, setSortOption] = useState<SortOption>('date-desc');
     const [loading, setLoading] = useState(true);
     const [deleteConfirmation, setDeleteConfirmation] = useState<{ isOpen: boolean; meetingId: string | null; meetingTitle: string }>({ isOpen: false, meetingId: null, meetingTitle: '' });
+    const [isDeleting, setIsDeleting] = useState(false);
 
     const loadMeetings = useCallback(async () => {
         try {
@@ -86,12 +87,16 @@ const AllMeetingsPage: React.FC<{
     const handleDeleteConfirm = async () => {
         if (!deleteConfirmation.meetingId) return;
         
+        setIsDeleting(true);
         try {
             await deleteMinute(deleteConfirmation.meetingId);
             await loadMeetings(); // Refresh the list
+            setDeleteConfirmation({ isOpen: false, meetingId: null, meetingTitle: '' });
         } catch (e) {
             setError(e instanceof Error ? e.message : "Failed to delete the meeting summary.");
             console.error(e);
+        } finally {
+            setIsDeleting(false);
         }
     };
 
@@ -247,6 +252,7 @@ const AllMeetingsPage: React.FC<{
                 confirmText="Delete"
                 cancelText="Cancel"
                 variant="destructive"
+                isLoading={isDeleting}
             />
         </main>
     );

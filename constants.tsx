@@ -16,7 +16,8 @@ import {
   Search,
   ArrowLeft,
   LayoutGrid,
-  List
+  List,
+  AlertTriangle
 } from 'lucide-react';
 
 export const LogoIcon = ({ className }: { className?: string }) => (
@@ -48,3 +49,4 @@ export const SearchIcon = Search;
 export const ArrowLeftIcon = ArrowLeft;
 export const ViewGridIcon = LayoutGrid;
 export const ViewListIcon = List;
+export const ExclamationTriangleIcon = AlertTriangle;

@@ -1,8 +1,9 @@
-import React from 'react';
+import React, { useState } from 'react';
 import type { Session } from '@supabase/supabase-js';
 import { supabase } from '../services/dbService';
 import { LogoIcon, SpinnerIcon, CheckCircleIcon } from '../constants';
 import { Button } from '@/components/ui/button';
+import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 
 interface HeaderProps {
     currentView: 'dashboard' | 'allMeetings' | 'pricing';
@@ -16,9 +17,15 @@ interface HeaderProps {
 }
 
 const Header: React.FC<HeaderProps> = ({ currentView, onNavigate, session, savingStatus }) => {
+    const [isMenuOpen, setIsMenuOpen] = useState(false);
     
     const handleLogout = async () => {
         await supabase.auth.signOut();
+    };
+    
+    const handleNavigation = (view: 'dashboard' | 'allMeetings' | 'pricing') => {
+        onNavigate(view);
+        setIsMenuOpen(false);
     };
 
     const SavingStatus = () => {
@@ -47,45 +54,122 @@ const Header: React.FC<HeaderProps> = ({ currentView, onNavigate, session, savin
                         <div className="hidden sm:block">
                             <SavingStatus />
                         </div>
-                        <nav className="flex items-center space-x-1 sm:space-x-2">
+                        
+                        {/* Desktop Navigation */}
+                        <nav className="hidden lg:flex items-center space-x-2">
                             <Button
                                 variant={currentView === 'dashboard' ? 'default' : 'ghost'}
                                 size="sm"
                                 onClick={() => onNavigate('dashboard')}
-                                className="text-xs sm:text-sm px-2 sm:px-3 py-1 sm:py-2"
+                                className="text-sm px-3 py-2"
                             >
-                                <span className="hidden sm:inline">Dashboard</span>
-                                <span className="sm:hidden">Home</span>
+                                Dashboard
                             </Button>
                             <Button
                                 variant={currentView === 'allMeetings' ? 'default' : 'ghost'}
                                 size="sm"
                                 onClick={() => onNavigate('allMeetings')}
-                                className="text-xs sm:text-sm px-2 sm:px-3 py-1 sm:py-2"
+                                className="text-sm px-3 py-2"
                             >
-                                <span className="hidden sm:inline">All Meetings</span>
-                                <span className="sm:hidden">All</span>
+                                All Meetings
                             </Button>
                             <Button
                                 variant={currentView === 'pricing' ? 'default' : 'ghost'}
                                 size="sm"
                                 onClick={() => onNavigate('pricing')}
-                                className="text-xs sm:text-sm px-2 sm:px-3 py-1 sm:py-2"
+                                className="text-sm px-3 py-2"
                             >
                                 Pricing
                             </Button>
                         </nav>
+                        
+                        {/* Desktop Logout */}
                         {session && (
                             <Button
                                 variant="outline"
                                 size="sm"
                                 onClick={handleLogout}
-                                className="text-xs sm:text-sm px-2 sm:px-3 py-1 sm:py-2"
+                                className="hidden lg:flex text-sm px-3 py-2"
                             >
-                                <span className="hidden sm:inline">Logout</span>
-                                <span className="sm:hidden">Out</span>
+                                Logout
                             </Button>
                         )}
+                        
+                        {/* Mobile/Tablet Hamburger Menu */}
+                        <Sheet open={isMenuOpen} onOpenChange={setIsMenuOpen}>
+                            <SheetTrigger asChild>
+                                <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    className="lg:hidden p-2"
+                                    aria-label="Open menu"
+                                >
+                                    <svg
+                                        className="h-5 w-5"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        viewBox="0 0 24 24"
+                                    >
+                                        <path
+                                            strokeLinecap="round"
+                                            strokeLinejoin="round"
+                                            strokeWidth={2}
+                                            d="M4 6h16M4 12h16M4 18h16"
+                                        />
+                                    </svg>
+                                </Button>
+                            </SheetTrigger>
+                            <SheetContent side="right" className="w-64 p-0">
+                                <div className="flex flex-col h-full">
+                                    <div className="flex items-center justify-between p-4 border-b border-border">
+                                        <div className="flex items-center space-x-2">
+                                            <LogoIcon className="h-6 w-6 text-primary" />
+                                            <span className="font-bold text-foreground">Easy Minutes</span>
+                                        </div>
+                                    </div>
+                                    
+                                    <nav className="flex-1 p-4 space-y-2">
+                                        <Button
+                                            variant={currentView === 'dashboard' ? 'default' : 'ghost'}
+                                            size="lg"
+                                            onClick={() => handleNavigation('dashboard')}
+                                            className="w-full justify-start text-left"
+                                        >
+                                            Dashboard
+                                        </Button>
+                                        <Button
+                                            variant={currentView === 'allMeetings' ? 'default' : 'ghost'}
+                                            size="lg"
+                                            onClick={() => handleNavigation('allMeetings')}
+                                            className="w-full justify-start text-left"
+                                        >
+                                            All Meetings
+                                        </Button>
+                                        <Button
+                                            variant={currentView === 'pricing' ? 'default' : 'ghost'}
+                                            size="lg"
+                                            onClick={() => handleNavigation('pricing')}
+                                            className="w-full justify-start text-left"
+                                        >
+                                            Pricing
+                                        </Button>
+                                    </nav>
+                                    
+                                    {session && (
+                                        <div className="p-4 border-t border-border">
+                                            <Button
+                                                variant="outline"
+                                                size="lg"
+                                                onClick={handleLogout}
+                                                className="w-full"
+                                            >
+                                                Logout
+                                            </Button>
+                                        </div>
+                                    )}
+                                </div>
+                            </SheetContent>
+                        </Sheet>
                     </div>
                 </div>
                 {/* Mobile saving status */}

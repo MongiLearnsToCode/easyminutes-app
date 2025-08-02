@@ -135,15 +135,15 @@ const EditableMinutesDisplay: React.FC<{ summary: MeetingSummary; setSummary: Re
                         <SectionHeader>{section === 'keyPoints' ? 'Key Points' : 'Decisions Made'}</SectionHeader>
                         <ul className="space-y-3">
                             {sanitizedSummary[section].map((item, index) => 
-<li key={index} className="flex items-start group text-muted-foreground/90 leading-relaxed">
-<span className="text-primary font-bold text-lg mr-3 mt-0.5">•</span>
+<li key={index} className="flex items-center group text-muted-foreground/90 leading-relaxed gap-2">
+<span className="text-primary font-bold text-lg flex-shrink-0">•</span>
                                     <input
                                         value={item}
                                         onChange={(e) => handleListChange(section, index, e.target.value)}
-                                        className="flex-1 bg-transparent w-full focus:ring-0 border-none p-0"
+                                        className="flex-1 bg-transparent w-full focus:ring-0 border-none p-0 py-1"
                                         placeholder={`New ${section === 'keyPoints' ? 'key point' : 'decision'}...`}
                                     />
-                                    <button onClick={() => removeListItem(section, index)} className="ml-2 opacity-0 group-hover:opacity-100 text-gray-500 hover:text-red-500 transition-opacity">
+                                    <button onClick={() => removeListItem(section, index)} className="opacity-0 group-hover:opacity-100 text-gray-500 hover:text-red-500 transition-opacity flex-shrink-0 p-1">
                                         <TrashIcon className="w-4 h-4"/>
                                     </button>
                                 </li>
@@ -198,6 +198,7 @@ const Dashboard: React.FC<{ onShowAll: () => void; selectedMeetingId: string | n
     const [currentSummary, setCurrentSummary] = useState<MeetingSummary | null>(null);
     const [originalSummaryForDiff, setOriginalSummaryForDiff] = useState<MeetingSummary | null>(null);
     const [deleteConfirmation, setDeleteConfirmation] = useState<{ isOpen: boolean; meetingId: string | null; meetingTitle: string }>({ isOpen: false, meetingId: null, meetingTitle: '' });
+    const [isDeleting, setIsDeleting] = useState(false);
 
     const [savedMinutes, setSavedMinutes] = useState<MeetingSummary[]>([]);
     const [searchTerm, setSearchTerm] = useState('');
@@ -654,6 +655,7 @@ const Dashboard: React.FC<{ onShowAll: () => void; selectedMeetingId: string | n
     const handleDeleteConfirm = useCallback(async () => {
         if (!deleteConfirmation.meetingId) return;
         
+        setIsDeleting(true);
         try {
             await deleteMinute(deleteConfirmation.meetingId);
             await loadMinutesFromDB();
@@ -661,9 +663,12 @@ const Dashboard: React.FC<{ onShowAll: () => void; selectedMeetingId: string | n
                 setCurrentSummary(null);
                 setOriginalSummaryForDiff(null);
             }
+            setDeleteConfirmation({ isOpen: false, meetingId: null, meetingTitle: '' });
         } catch (e) {
             setError(e instanceof Error ? e.message : "Failed to delete minutes.");
             console.error(e);
+        } finally {
+            setIsDeleting(false);
         }
     }, [deleteConfirmation.meetingId, currentSummary, loadMinutesFromDB]);
 
@@ -702,9 +707,9 @@ const Dashboard: React.FC<{ onShowAll: () => void; selectedMeetingId: string | n
         
 
     return (
-        <main className="container mx-auto p-2 sm:p-4 md:p-6 lg:p-8 max-w-7xl">
-            <div className="grid grid-cols-1 lg:grid-cols-5 gap-4 sm:gap-6 lg:gap-8 lg:items-start">
-                {/* Left Column */}
+        <main className="container mx-auto p-1 sm:p-2 md:p-4 lg:p-8 max-w-7xl">
+            <div className="grid grid-cols-1 lg:grid-cols-5 gap-3 sm:gap-4 md:gap-6 lg:gap-8 lg:items-start">
+                {/* Left Column - Meeting Notes */}
                 <div className="lg:col-span-2 bg-card p-3 sm:p-4 md:p-6 rounded-xl sm:rounded-2xl shadow-sm flex flex-col space-y-4 sm:space-y-6 order-2 lg:order-1">
                     <div>
                         <h2 className="text-2xl font-bold text-foreground mb-4">Meeting Notes</h2>
@@ -905,7 +910,7 @@ const Dashboard: React.FC<{ onShowAll: () => void; selectedMeetingId: string | n
 
                 </div>
 
-                {/* Right Column */}
+                {/* Right Column - Summary */}
 <div className="lg:col-span-3 bg-card p-3 sm:p-4 md:p-6 rounded-xl sm:rounded-2xl shadow-sm order-1 lg:order-2">
                     <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-3 sm:gap-4">
                       <div className="flex items-center space-x-3 flex-grow min-w-0 w-full sm:w-auto">
@@ -999,6 +1004,7 @@ className="flex items-center space-x-1 px-3 py-2 text-sm font-medium text-foregr
                 confirmText="Delete"
                 cancelText="Cancel"
                 variant="destructive"
+                isLoading={isDeleting}
             />
         </main>
     );
