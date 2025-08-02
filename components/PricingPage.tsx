@@ -126,7 +126,7 @@ const PricingPage: React.FC = () => {
                     </p>
                     
                     {/* Free Trial Highlight */}
-                    <div className="mt-8 max-w-lg mx-auto">
+                    <div className="mt-8 max-w-md mx-auto">
                         <Alert className="border-brand-primary/20 bg-brand-primary/5">
                             <CheckCircleIcon className="h-4 w-4 text-brand-primary" />
                             <AlertDescription className="text-brand-secondary">

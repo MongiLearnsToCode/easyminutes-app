@@ -8,6 +8,8 @@ import Dashboard from './components/Dashboard';
 import AllMeetingsPage from './components/AllMeetingsPage';
 import PricingPage from './components/PricingPage';
 import { LogoIcon } from './constants';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Separator } from '@/components/ui/separator';
 
 const App: React.FC = () => {
     const [session, setSession] = useState<Session | null>(null);
@@ -52,29 +54,46 @@ const App: React.FC = () => {
     if (!session) {
         return (
             <div className="min-h-screen bg-brand-bg flex items-center justify-center p-4">
-                <div className="w-full max-w-sm bg-brand-surface rounded-2xl shadow-xl p-8">
-                    <div className="flex flex-col items-center mb-8">
-                        <LogoIcon className="h-12 w-12 mb-4" />
-                        <h1 className="text-2xl font-bold text-brand-secondary">Welcome to Easy Minutes</h1>
-                        <p className="text-brand-muted mt-1 text-center">Your AI-powered meeting assistant.</p>
-                    </div>
-                    <Auth
-                        supabaseClient={supabase}
-                        appearance={{ 
-                            theme: ThemeSupa,
-                            variables: {
-                                default: {
-                                    colors: {
-                                        brand: '#F45D48',
-                                        brandAccent: '#E14D39'
+                <Card className="w-full max-w-md shadow-2xl">
+                    <CardHeader className="text-center pb-4">
+                        <div className="flex justify-center mb-4">
+                            <LogoIcon className="h-16 w-16 text-brand-primary" />
+                        </div>
+                        <CardTitle className="text-3xl font-bold text-brand-secondary mb-2">
+                            Welcome to Easy Minutes
+                        </CardTitle>
+                        <p className="text-brand-muted text-lg">
+                            Your AI-powered meeting assistant
+                        </p>
+                    </CardHeader>
+                    
+                    <CardContent className="space-y-6">
+                        <Separator />
+                        
+                        <div className="text-center">
+                            <p className="text-sm text-brand-muted mb-4">
+                                Sign in to start transforming your meetings with AI-powered minutes
+                            </p>
+                        </div>
+                        
+                        <Auth
+                            supabaseClient={supabase}
+                            appearance={{ 
+                                theme: ThemeSupa,
+                                variables: {
+                                    default: {
+                                        colors: {
+                                            brand: '#F45D48',
+                                            brandAccent: '#E14D39'
+                                        }
                                     }
                                 }
-                            }
-                        }}
-                        providers={['google', 'github']}
-                        theme="light"
-                    />
-                </div>
+                            }}
+                            providers={['google', 'github']}
+                            theme="light"
+                        />
+                    </CardContent>
+                </Card>
             </div>
         );
     }
