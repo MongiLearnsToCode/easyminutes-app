@@ -48,21 +48,21 @@ const App: React.FC = () => {
     };
 
     if (loading) {
-        return <div className="min-h-screen bg-brand-bg" />;
+        return <div className="min-h-screen bg-background" />;
     }
 
     if (!session) {
         return (
-            <div className="min-h-screen bg-brand-bg flex items-center justify-center p-4">
+            <div className="min-h-screen bg-background flex items-center justify-center p-4">
                 <Card className="w-full max-w-md shadow-2xl">
                     <CardHeader className="text-center pb-4">
                         <div className="flex justify-center mb-4">
-                            <LogoIcon className="h-16 w-16 text-brand-primary" />
+                            <LogoIcon className="h-16 w-16 text-primary" />
                         </div>
-                        <CardTitle className="text-3xl font-bold text-brand-secondary mb-2">
+                        <CardTitle className="text-3xl font-bold text-foreground mb-2">
                             Welcome to Easy Minutes
                         </CardTitle>
-                        <p className="text-brand-muted text-lg">
+                        <p className="text-muted-foreground text-lg">
                             Your AI-powered meeting assistant
                         </p>
                     </CardHeader>
@@ -71,7 +71,7 @@ const App: React.FC = () => {
                         <Separator />
                         
                         <div className="text-center">
-                            <p className="text-sm text-brand-muted mb-4">
+                            <p className="text-sm text-muted-foreground mb-4">
                                 Sign in to start transforming your meetings with AI-powered minutes
                             </p>
                         </div>
@@ -83,8 +83,8 @@ const App: React.FC = () => {
                                 variables: {
                                     default: {
                                         colors: {
-                                            brand: '#F45D48',
-                                            brandAccent: '#E14D39'
+                                            brand: 'hsl(var(--primary))',
+                                            brandAccent: 'hsl(var(--primary))',
                                         }
                                     }
                                 }
@@ -99,7 +99,7 @@ const App: React.FC = () => {
     }
 
     return (
-        <div className="min-h-screen bg-brand-bg font-sans text-brand-secondary">
+        <div className="min-h-screen bg-background font-sans text-foreground">
             <Header currentView={view} onNavigate={handleNavigate} session={session} savingStatus={savingStatus} />
             {view === 'dashboard' && <Dashboard onShowAll={() => handleNavigate('allMeetings')} selectedMeetingId={selectedMeetingId} onSavingStatusChange={setSavingStatus} />}
             {view === 'allMeetings' && <AllMeetingsPage onSelectMeeting={handleSelectMeetingFromAll} onBack={() => handleNavigate('dashboard')} />}

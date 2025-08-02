@@ -20,11 +20,12 @@ import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Skeleton } from '@/components/ui/skeleton';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { ConfirmationDialog } from './ConfirmationDialog';
 
 type ActiveTab = 'text' | 'voice' | 'upload';
 
 const SectionHeader: React.FC<{ children: React.ReactNode }> = ({ children }) => (
-    <h4 className="text-sm font-bold text-brand-muted uppercase tracking-wider mb-4 mt-8 pb-2 border-b border-gray-200/80">
+    <h4 className="text-sm font-bold text-muted-foreground uppercase tracking-wider mb-4 mt-8 pb-2 border-b border-border">
         {children}
     </h4>
 );
@@ -34,7 +35,7 @@ const AddItemButton: React.FC<{ onClick: () => void; children: React.ReactNode }
         onClick={onClick}
         variant="ghost"
         size="sm"
-        className="flex items-center space-x-2 text-sm font-medium text-brand-primary hover:text-opacity-80 transition-colors mt-3 ml-1 h-auto p-1"
+        className="flex items-center space-x-2 text-sm font-medium text-primary hover:text-primary/80 transition-colors mt-3 ml-1 h-auto p-1"
     >
         <PlusIcon className="w-4 h-4" />
         <span>{children}</span>
@@ -92,15 +93,15 @@ const EditableMinutesDisplay: React.FC<{ summary: MeetingSummary; setSummary: Re
     };
 
     return (
-        <div className="space-y-6 text-brand-secondary animate-fade-in">
+        <div className="space-y-6 text-foreground animate-fade-in">
              <div>
-                <h4 className="text-sm font-bold text-brand-muted uppercase tracking-wider mb-4 pb-2 border-b border-gray-200/80">
+                <h4 className="text-sm font-bold text-muted-foreground uppercase tracking-wider mb-4 pb-2 border-b border-border">
                     Summary
                 </h4>
                 <Textarea
                     value={sanitizedSummary.summary}
                     onChange={(e) => updateSummary({ summary: e.target.value })}
-                    className="bg-brand-bg/80 border-l-4 border-brand-primary/50 focus:border-brand-primary/50 resize-none"
+                    className="bg-muted/50 border-l-4 border-primary/50 focus:border-primary/50 resize-none"
                     placeholder="Meeting summary..."
                     rows={4}
                 />
@@ -110,7 +111,7 @@ const EditableMinutesDisplay: React.FC<{ summary: MeetingSummary; setSummary: Re
                 <SectionHeader>Attendees</SectionHeader>
                 <div className="flex flex-wrap gap-2">
                     {sanitizedSummary.attendees.map((attendee, index) => (
-                        <div key={index} className="flex items-center group bg-gray-200/60 text-brand-secondary text-sm font-medium pl-3 pr-1 py-1 rounded-full shadow-sm">
+<div key={index} className="flex items-center group bg-muted/60 text-foreground text-sm font-medium pl-3 pr-1 py-1 rounded-full shadow-sm">
                             <input
                                 value={attendee}
                                 onChange={(e) => handleListChange('attendees', index, e.target.value)}
@@ -134,8 +135,8 @@ const EditableMinutesDisplay: React.FC<{ summary: MeetingSummary; setSummary: Re
                         <SectionHeader>{section === 'keyPoints' ? 'Key Points' : 'Decisions Made'}</SectionHeader>
                         <ul className="space-y-3">
                             {sanitizedSummary[section].map((item, index) => 
-                                <li key={index} className="flex items-start group text-brand-secondary/90 leading-relaxed">
-                                    <span className="text-brand-primary font-bold text-lg mr-3 mt-0.5">•</span>
+<li key={index} className="flex items-start group text-muted-foreground/90 leading-relaxed">
+<span className="text-primary font-bold text-lg mr-3 mt-0.5">•</span>
                                     <input
                                         value={item}
                                         onChange={(e) => handleListChange(section, index, e.target.value)}
@@ -164,15 +165,15 @@ const EditableMinutesDisplay: React.FC<{ summary: MeetingSummary; setSummary: Re
                                     value={item.task}
                                     onChange={(e) => handleActionItemChange(index, 'task', e.target.value)}
                                     placeholder="Action item task..."
-                                    className="font-semibold text-brand-secondary leading-tight w-full bg-transparent p-0 border-none focus:ring-0"
+className="font-semibold text-foreground leading-tight w-full bg-transparent p-0 border-none focus:ring-0"
                                 />
                                  <div className="flex items-center">
-                                    <span className="text-xs font-bold text-brand-primary uppercase">Assigned:</span>
+<span className="text-xs font-bold text-primary/80 uppercase">Assigned:</span>
                                     <input
                                       value={item.owner}
                                       onChange={(e) => handleActionItemChange(index, 'owner', e.target.value)}
                                       placeholder="Owner"
-                                      className="ml-2 text-xs font-bold text-brand-secondary bg-brand-primary/10 px-2 py-1 rounded-md p-0 border-none focus:ring-0"
+className="ml-2 text-xs font-bold text-foreground bg-primary/10 px-2 py-1 rounded-md p-0 border-none focus:ring-0"
                                     />
                                 </div>
                             </div>
@@ -196,6 +197,7 @@ const Dashboard: React.FC<{ onShowAll: () => void; selectedMeetingId: string | n
     
     const [currentSummary, setCurrentSummary] = useState<MeetingSummary | null>(null);
     const [originalSummaryForDiff, setOriginalSummaryForDiff] = useState<MeetingSummary | null>(null);
+    const [deleteConfirmation, setDeleteConfirmation] = useState<{ isOpen: boolean; meetingId: string | null; meetingTitle: string }>({ isOpen: false, meetingId: null, meetingTitle: '' });
 
     const [savedMinutes, setSavedMinutes] = useState<MeetingSummary[]>([]);
     const [searchTerm, setSearchTerm] = useState('');
@@ -645,21 +647,29 @@ const Dashboard: React.FC<{ onShowAll: () => void; selectedMeetingId: string | n
     }, [selectedMeetingId, savedMinutes]);
 
 
-    const handleDelete = useCallback(async (id: string) => {
-        if (window.confirm("Are you sure you want to delete this meeting summary?")) {
-            try {
-                await deleteMinute(id);
-                await loadMinutesFromDB();
-                if (currentSummary?.id === id) {
-                    setCurrentSummary(null);
-                    setOriginalSummaryForDiff(null);
-                }
-            } catch (e) {
-                setError(e instanceof Error ? e.message : "Failed to delete minutes.");
-                console.error(e);
+    const handleDeleteClick = useCallback((id: string, title: string) => {
+        setDeleteConfirmation({ isOpen: true, meetingId: id, meetingTitle: title });
+    }, []);
+
+    const handleDeleteConfirm = useCallback(async () => {
+        if (!deleteConfirmation.meetingId) return;
+        
+        try {
+            await deleteMinute(deleteConfirmation.meetingId);
+            await loadMinutesFromDB();
+            if (currentSummary?.id === deleteConfirmation.meetingId) {
+                setCurrentSummary(null);
+                setOriginalSummaryForDiff(null);
             }
+        } catch (e) {
+            setError(e instanceof Error ? e.message : "Failed to delete minutes.");
+            console.error(e);
         }
-    }, [currentSummary, loadMinutesFromDB]);
+    }, [deleteConfirmation.meetingId, currentSummary, loadMinutesFromDB]);
+
+    const handleDeleteCancel = useCallback(() => {
+        setDeleteConfirmation({ isOpen: false, meetingId: null, meetingTitle: '' });
+    }, []);
     
     const handleFileSelect = (files: FileList | null) => { if (files?.length) setUploadedFile(files[0]); };
     const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => { e.preventDefault(); setIsDragging(true); };
@@ -695,9 +705,9 @@ const Dashboard: React.FC<{ onShowAll: () => void; selectedMeetingId: string | n
         <main className="container mx-auto p-4 sm:p-6 lg:p-8">
             <div className="grid grid-cols-1 lg:grid-cols-5 gap-8 lg:items-start">
                 {/* Left Column */}
-                <div className="lg:col-span-2 bg-brand-surface p-6 rounded-2xl shadow-sm flex flex-col space-y-6">
+                <div className="lg:col-span-2 bg-card p-6 rounded-2xl shadow-sm flex flex-col space-y-6">
                     <div>
-                        <h2 className="text-2xl font-bold text-brand-secondary mb-4">Meeting Notes</h2>
+                        <h2 className="text-2xl font-bold text-foreground mb-4">Meeting Notes</h2>
                         <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as ActiveTab)}>
                             <TabsList className="grid w-full grid-cols-3">
                                 <TabsTrigger value="text" className="flex items-center space-x-2">
@@ -735,8 +745,8 @@ const Dashboard: React.FC<{ onShowAll: () => void; selectedMeetingId: string | n
                                         <MicIcon className="w-5 h-5 mr-2" />
                                         {isRecording ? 'Stop Recording' : 'Start Recording'}
                                     </Button>
-                                    <div className="flex-grow p-4 border border-gray-200 rounded-lg overflow-y-auto bg-gray-50 min-h-[250px]">
-                                        <p className="text-brand-muted whitespace-pre-wrap">
+                                    <div className="flex-grow p-4 border border-border rounded-lg overflow-y-auto bg-muted min-h-[250px]">
+                                        <p className="text-muted-foreground whitespace-pre-wrap">
                                             {transcript || 'Your live transcription will appear here...'}
                                         </p>
                                         {isRecording && <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse mt-2"></div>}
@@ -750,7 +760,7 @@ const Dashboard: React.FC<{ onShowAll: () => void; selectedMeetingId: string | n
                                     onDragLeave={handleDragLeave} 
                                     onDrop={handleDrop} 
                                     className={`relative flex flex-col items-center justify-center w-full min-h-[300px] border-2 border-dashed rounded-lg cursor-pointer transition-colors duration-200 ${
-                                        isDragging ? 'border-brand-primary bg-brand-primary/10' : 'border-gray-300 bg-gray-50 hover:bg-gray-100'
+                                        isDragging ? 'border-primary bg-primary/10' : 'border-border bg-muted hover:bg-muted/80'
                                     }`}
                                 >
                                     <input 
@@ -762,18 +772,18 @@ const Dashboard: React.FC<{ onShowAll: () => void; selectedMeetingId: string | n
                                     />
                                     {isProcessingFile ? (
                                         <div className="flex flex-col items-center">
-                                            <SpinnerIcon className="text-brand-primary" />
-                                            <p className="mt-2 text-brand-muted">Processing file...</p>
+                                            <SpinnerIcon className="text-primary" />
+                                            <p className="mt-2 text-muted-foreground">Processing file...</p>
                                         </div>
                                     ) : uploadedFile ? (
                                         <Card className="w-full max-w-sm">
                                             <CardContent className="text-center p-4">
                                                 {audioInput ? (
-                                                    <FileAudioIcon className="w-16 h-16 mx-auto text-brand-primary/80 mb-2" />
+                                                    <FileAudioIcon className="w-16 h-16 mx-auto text-primary/80 mb-2" />
                                                 ) : (
-                                                    <FileTextIcon className="w-16 h-16 mx-auto text-brand-primary/80 mb-2" />
+                                                    <FileTextIcon className="w-16 h-16 mx-auto text-primary/80 mb-2" />
                                                 )}
-                                                <p className="font-semibold text-brand-secondary truncate">{uploadedFile.name}</p>
+                                                <p className="font-semibold text-foreground truncate">{uploadedFile.name}</p>
                                                 <Badge variant="secondary" className="mt-1">
                                                     {Math.round(uploadedFile.size / 1024)} KB
                                                 </Badge>
@@ -789,9 +799,9 @@ const Dashboard: React.FC<{ onShowAll: () => void; selectedMeetingId: string | n
                                         </Card>
                                     ) : (
                                         <div className="text-center" onClick={() => fileInputRef.current?.click()}>
-                                            <UploadIcon className="w-12 h-12 mx-auto text-gray-400 mb-4"/>
-                                            <p className="font-semibold text-brand-secondary mb-2">Drag & drop a file here</p>
-                                            <p className="text-sm text-brand-muted mb-4">or click to browse</p>
+                                            <UploadIcon className="w-12 h-12 mx-auto text-muted-foreground mb-4"/>
+                                            <p className="font-semibold text-foreground mb-2">Drag & drop a file here</p>
+                                            <p className="text-sm text-muted-foreground mb-4">or click to browse</p>
                                             <Badge variant="outline">Supports: TXT, DOCX, MP3, WAV, M4A</Badge>
                                         </div>
                                     )}
@@ -807,16 +817,51 @@ const Dashboard: React.FC<{ onShowAll: () => void; selectedMeetingId: string | n
                                 className="w-full"
                             >
                                 {isLoading ? <SpinnerIcon className="mr-2" /> : null}
-                                Generate Minutes
+                                {currentSummary ? 'Regenerate Minutes' : 'Generate Minutes'}
                             </Button>
+                        </div>
+
+                        <div className="mt-4">
+{currentSummary && (
+                            <Button 
+                                onClick={() => {
+                                    // Clear all input fields
+                                    setInputText('');
+                                    setTranscript('');
+                                    setUploadedFile(null);
+                                    setAudioInput(null);
+                                    
+                                    // Clear current meeting summary
+                                    setCurrentSummary(null);
+                                    setOriginalSummaryForDiff(null);
+                                    
+                                    // Clear any errors
+                                    setError(null);
+                                    
+                                    // Stop recording if active
+                                    if (isRecording && recognitionRef.current) {
+                                        recognitionRef.current.stop();
+                                        setIsRecording(false);
+                                    }
+                                    
+                                    // Reset to text tab for consistency
+                                    setActiveTab('text');
+                                }}
+                                variant="outline"
+                                size="lg"
+                                className="w-full"
+                            >
+                                ✨ Start New Meeting
+                            </Button>
+                            )}
                         </div>
                     </div>
                     
                     <div className="flex-grow flex flex-col min-h-0">
                         <div className="flex items-center justify-between mb-4">
-                             <button onClick={onShowAll} className="text-xl font-bold text-brand-secondary flex items-center hover:text-brand-primary transition-colors group">
-                                <HistoryIcon className="w-6 h-6 mr-2 text-brand-primary transition-transform group-hover:scale-110"/>
-                                <h3 className="font-bold text-xl">Recent Meetings</h3>
+<button onClick={onShowAll} className="text-xl font-bold text-foreground flex items-center hover:text-primary transition-colors group">
+                                <HistoryIcon className="w-6 h-6 mr-2 text-primary transition-transform group-hover:scale-110"/>
+                                <h3 className="font-bold text-xl text-foreground">Recent Meetings</h3>
                             </button>
                         </div>
                         <div className="relative mb-4">
@@ -827,53 +872,59 @@ const Dashboard: React.FC<{ onShowAll: () => void; selectedMeetingId: string | n
                                 onChange={(e) => setSearchTerm(e.target.value)} 
                                 className="pl-10"
                             />
-                            <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400"/>
+<SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground"/>
                         </div>
-                        <div className="flex-grow overflow-y-auto -mr-2 pr-2 space-y-2">
-                            {recentFilteredMinutes.length > 0 ? recentFilteredMinutes.map(minute => (
-                                <div key={minute.id} onClick={() => handleSelectMinute(minute)} className={`p-3 rounded-lg cursor-pointer group transition-colors ${currentSummary?.id === minute.id ? 'bg-brand-primary/10' : 'hover:bg-gray-100'}`}>
-                                    <div className="flex justify-between items-start">
-                                        <div>
-                                            <h4 className="font-semibold text-brand-secondary truncate">{minute.title}</h4>
-                                            <p className="text-sm text-brand-muted">{new Date(minute.createdAt).toLocaleString()}</p>
+                        <div className="flex-grow overflow-y-auto space-y-3">
+                            {recentFilteredMinutes.length > 0 ? recentFilteredMinutes.map(minute =>
+                                <div key={minute.id} onClick={() => handleSelectMinute(minute)} className={`p-4 rounded-lg cursor-pointer group transition-colors border ${currentSummary?.id === minute.id ? 'bg-primary/10 border-primary/20' : 'hover:bg-muted/60 border-transparent'}`}>
+                                    <div className="flex justify-between items-start gap-3">
+                                        <div className="flex-1 min-w-0">
+                                            <h4 className="font-semibold text-foreground truncate">{minute.title}</h4>
+                                            <p className="text-sm text-muted-foreground mt-1">{new Date(minute.createdAt).toLocaleString()}</p>
                                         </div>
-                                        <button onClick={(e) => { e.stopPropagation(); handleDelete(minute.id); }} className="p-1 rounded-full text-gray-400 hover:bg-red-100 hover:text-red-600 opacity-0 group-hover:opacity-100 transition-opacity"><TrashIcon className="w-4 h-4"/></button>
+                                        <button 
+                                            onClick={(e) => { e.stopPropagation(); handleDeleteClick(minute.id, minute.title); }} 
+                                            className="flex-shrink-0 p-2 rounded-full text-gray-400 hover:bg-red-100 hover:text-red-600 opacity-0 group-hover:opacity-100 transition-all duration-200"
+                                            aria-label="Delete meeting"
+                                        >
+                                            <TrashIcon className="w-4 h-4"/>
+                                        </button>
                                     </div>
                                 </div>
-                            )) : <p className="text-center text-brand-muted pt-8">No saved minutes found.</p>}
+                            ) : <p className="text-center text-muted-foreground pt-8">No saved minutes found.</p>}
                         </div>
                         {savedMinutes.length > 5 && (
                             <div className="mt-4 text-center">
-                                <button onClick={onShowAll} className="font-semibold text-brand-primary hover:text-opacity-80 transition-colors py-2">
+<button onClick={onShowAll} className="font-semibold text-primary hover:text-primary/80 transition-colors py-2">
                                     View All Meetings &rarr;
                                 </button>
                             </div>
                         )}
-                         <p className="text-xs text-gray-400 mt-4 text-center">Your minutes are securely stored in the cloud.</p>
+<p className="text-xs text-muted-foreground mt-4 text-center">Your minutes are securely stored in the cloud.</p>
                     </div>
 
                 </div>
 
                 {/* Right Column */}
-                <div className="lg:col-span-3 bg-brand-surface p-6 rounded-2xl shadow-sm">
+<div className="lg:col-span-3 bg-card p-6 rounded-2xl shadow-sm">
                     <div className="flex justify-between items-center mb-4 gap-4">
                       <div className="flex items-center space-x-3 flex-grow min-w-0">
                           {currentSummary ? (
                             <input
                                 value={currentSummary.title}
                                 onChange={(e) => setCurrentSummary(cs => cs ? { ...cs, title: e.target.value } : null)}
-                                className="w-full bg-transparent text-2xl font-bold text-brand-secondary border-none focus:ring-0 p-0 truncate"
+className="w-full bg-transparent text-2xl font-bold text-foreground border-none focus:ring-0 p-0 truncate"
                                 placeholder="Meeting Title"
                             />
                           ) : (
-                             <h2 className="text-2xl font-bold text-brand-secondary">Summary</h2>
+<h2 className="text-2xl font-bold text-foreground">Summary</h2>
                           )}
                       </div>
                       {currentSummary && !isLoading && (
                             <div className="flex items-center space-x-2">
                                 <button
                                     onClick={() => handleCopyToClipboard(currentSummary!)}
-                                    className="flex items-center space-x-1 px-3 py-2 text-sm font-medium text-brand-secondary bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
+className="flex items-center space-x-1 px-3 py-2 text-sm font-medium text-foreground bg-muted hover:bg-muted/80 rounded-lg transition-colors"
                                     title={copyStatusText}
                                 >
                                     <DocumentDuplicateIcon className="w-4 h-4" />
@@ -881,7 +932,7 @@ const Dashboard: React.FC<{ onShowAll: () => void; selectedMeetingId: string | n
                                 </button>
                                 <button
                                     onClick={() => handleShareByEmail(currentSummary!)}
-                                    className="flex items-center space-x-1 px-3 py-2 text-sm font-medium text-brand-secondary bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
+className="flex items-center space-x-1 px-3 py-2 text-sm font-medium text-foreground bg-muted hover:bg-muted/80 rounded-lg transition-colors"
                                     title="Share via Email"
                                 >
                                     <MailIcon className="w-4 h-4" />
@@ -890,7 +941,7 @@ const Dashboard: React.FC<{ onShowAll: () => void; selectedMeetingId: string | n
                                 <DropdownMenu>
                                     <DropdownMenuTrigger asChild>
                                         <button
-                                            className="flex items-center space-x-1 px-3 py-2 text-sm font-medium text-brand-secondary bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
+className="flex items-center space-x-1 px-3 py-2 text-sm font-medium text-foreground bg-muted hover:bg-muted/80 rounded-lg transition-colors"
                                             title="Export Options"
                                         >
                                             <ArrowUpTrayIcon className="w-4 h-4" />
@@ -911,7 +962,7 @@ const Dashboard: React.FC<{ onShowAll: () => void; selectedMeetingId: string | n
                             </div>
                         )}
                     </div>
-                    <div className="min-h-[400px] p-4 bg-brand-bg/50 rounded-lg">
+<div className="min-h-[400px] p-4 bg-muted/30 rounded-lg">
                         {isLoading && (
                             <div className="space-y-4">
                                 <Skeleton className="h-8 w-3/4" />
@@ -929,7 +980,7 @@ const Dashboard: React.FC<{ onShowAll: () => void; selectedMeetingId: string | n
                         )}
                         {currentSummary && !isLoading && <EditableMinutesDisplay summary={currentSummary} setSummary={setCurrentSummary} />}
                         {!isLoading && !error && !currentSummary && (
-                            <div className="text-center text-brand-muted pt-16">
+<div className="text-center text-muted-foreground pt-16">
                                 <p className="text-lg">Your meeting summary will appear here.</p>
                                 <p>Provide notes, record audio, or upload a file and click "Generate Minutes".</p>
                                 <p className="mt-4">Or, select a summary from your history.</p>
@@ -938,6 +989,17 @@ const Dashboard: React.FC<{ onShowAll: () => void; selectedMeetingId: string | n
                     </div>
                 </div>
             </div>
+            
+            <ConfirmationDialog
+                isOpen={deleteConfirmation.isOpen}
+                onClose={handleDeleteCancel}
+                onConfirm={handleDeleteConfirm}
+                title="Delete Meeting Summary"
+                description={`Are you sure you want to delete "${deleteConfirmation.meetingTitle}"? This action cannot be undone.`}
+                confirmText="Delete"
+                cancelText="Cancel"
+                variant="destructive"
+            />
         </main>
     );
 };

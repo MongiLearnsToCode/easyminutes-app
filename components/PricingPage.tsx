@@ -110,36 +110,37 @@ const PricingPage: React.FC = () => {
     };
 
     return (
-        <div className="min-h-screen bg-brand-bg py-12 px-4 sm:px-6 lg:px-8">
+        <div className="min-h-screen bg-background py-12 px-4 sm:px-6 lg:px-8">
             <div className="max-w-7xl mx-auto">
                 {/* Header Section */}
                 <div className="text-center mb-16">
-                    <div className="flex justify-center items-center mb-6">
-                        <LogoIcon className="h-12 w-12 mr-4" />
-                        <h1 className="text-4xl font-bold text-brand-secondary">
+                    <div className="text-center mb-6">
+                        <h1 className="text-4xl font-bold text-foreground">
                             Choose Your Plan
                         </h1>
                     </div>
-                    <p className="text-xl text-brand-muted max-w-3xl mx-auto leading-relaxed">
+                    <p className="text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed">
                         Transform your meetings with AI-powered minutes. Start with one free meeting, 
                         then choose the plan that fits your team's needs.
                     </p>
                     
                     {/* Free Trial Highlight */}
-                    <div className="mt-8 max-w-md mx-auto">
-                        <Alert className="border-brand-primary/20 bg-brand-primary/5">
-                            <CheckCircleIcon className="h-4 w-4 text-brand-primary" />
-                            <AlertDescription className="text-brand-secondary">
-                                <div className="text-center">
-                                    <div className="font-semibold text-brand-primary mb-1">
-                                        Try 1 meeting absolutely free
-                                    </div>
-                                    <div className="text-sm text-brand-muted">
-                                        Full features unlocked after subscription
-                                    </div>
+                    <div className="mt-12 mb-4">
+                        <div className="bg-gradient-to-r from-primary/10 via-primary/5 to-primary/10 border border-primary/20 rounded-xl py-8 px-6 text-center">
+                            <div className="flex items-center justify-center mb-4">
+                                <div className="bg-primary/10 rounded-full p-3 mr-4">
+                                    <CheckCircleIcon className="h-8 w-8 text-primary" />
                                 </div>
-                            </AlertDescription>
-                        </Alert>
+                                <div>
+                                    <h3 className="text-2xl font-bold text-primary mb-1">
+                                        Try 1 Meeting Absolutely Free
+                                    </h3>
+                                    <p className="text-muted-foreground text-base">
+                                        Full features unlocked after subscription
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
@@ -150,7 +151,7 @@ const PricingPage: React.FC = () => {
                             key={plan.name}
                             className={`relative h-full transition-all duration-300 hover:shadow-xl ${
                                 plan.isPopular 
-                                    ? 'ring-2 ring-brand-primary shadow-xl scale-105' 
+                                    ? 'ring-2 ring-primary shadow-xl scale-105' 
                                     : plan.isBestValue 
                                     ? 'ring-2 ring-green-500 shadow-lg' 
                                     : 'hover:scale-105'
@@ -159,7 +160,7 @@ const PricingPage: React.FC = () => {
                             {/* Popular/Best Value Badges */}
                             {plan.isPopular && (
                                 <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
-                                    <Badge className="bg-brand-primary text-white px-4 py-1 text-sm font-bold">
+                                    <Badge className="bg-primary text-primary-foreground px-4 py-1 text-sm font-bold">
                                         Most Popular
                                     </Badge>
                                 </div>
@@ -173,14 +174,14 @@ const PricingPage: React.FC = () => {
                             )}
 
                             <CardHeader className="text-center pb-4">
-                                <CardTitle className="text-xl font-bold text-brand-secondary mb-2">
+                                <CardTitle className="text-xl font-bold text-foreground mb-2">
                                     {plan.name}
                                 </CardTitle>
                                 <div className="space-y-2">
-                                    <div className="text-3xl font-bold text-brand-primary">
+                                    <div className="text-3xl font-bold text-primary">
                                         {plan.price}
                                     </div>
-                                    <div className="text-sm text-brand-muted">
+                                    <div className="text-sm text-muted-foreground">
                                         {plan.includedMeetings} meetings included
                                     </div>
                                     <div className="text-xs font-semibold text-green-600 bg-green-50 px-2 py-1 rounded">
@@ -190,7 +191,7 @@ const PricingPage: React.FC = () => {
                             </CardHeader>
 
                             <CardContent className="flex-1 flex flex-col">
-                                <p className="text-sm text-brand-muted mb-6 text-center italic">
+                                <p className="text-sm text-muted-foreground mb-6 text-center italic">
                                     {plan.targetUser}
                                 </p>
 
@@ -198,8 +199,8 @@ const PricingPage: React.FC = () => {
                                 <ul className="space-y-3 mb-8 flex-1">
                                     {plan.features.map((feature, featureIndex) => (
                                         <li key={featureIndex} className="flex items-start">
-                                            <CheckCircleIcon className="w-5 h-5 text-brand-primary mr-3 mt-0.5 flex-shrink-0" />
-                                            <span className="text-sm text-brand-secondary">{feature}</span>
+                                            <CheckCircleIcon className="w-5 h-5 text-primary mr-3 mt-0.5 flex-shrink-0" />
+                                            <span className="text-sm text-foreground">{feature}</span>
                                         </li>
                                     ))}
                                 </ul>
@@ -210,7 +211,7 @@ const PricingPage: React.FC = () => {
                                     size="lg"
                                     className={`w-full font-semibold ${
                                         plan.isPopular 
-                                            ? 'bg-brand-primary hover:bg-brand-primary/90 text-white' 
+                                            ? 'bg-primary hover:bg-primary/90 text-primary-foreground' 
                                             : plan.isBestValue 
                                             ? 'bg-green-500 hover:bg-green-600 text-white'
                                             : ''
@@ -225,35 +226,35 @@ const PricingPage: React.FC = () => {
                 </div>
 
                 {/* Implementation Flow Section */}
-                <div className="bg-white rounded-2xl shadow-lg p-8 mb-16">
-                    <h2 className="text-2xl font-bold text-brand-secondary text-center mb-8">
+                <div className="bg-card rounded-2xl shadow-lg p-8 mb-16">
+                    <h2 className="text-2xl font-bold text-foreground text-center mb-8">
                         How It Works
                     </h2>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                         <div className="text-center">
-                            <div className="w-12 h-12 bg-brand-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                                <span className="text-brand-primary font-bold text-xl">1</span>
+                            <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                                <span className="text-primary font-bold text-xl">1</span>
                             </div>
-                            <h3 className="font-semibold text-brand-secondary mb-2">Try Free</h3>
-                            <p className="text-sm text-brand-muted">
+                            <h3 className="font-semibold text-foreground mb-2">Try Free</h3>
+                            <p className="text-sm text-muted-foreground">
                                 Start with 1 completely free meeting to experience our AI-powered minutes generation.
                             </p>
                         </div>
                         <div className="text-center">
-                            <div className="w-12 h-12 bg-brand-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                                <span className="text-brand-primary font-bold text-xl">2</span>
+                            <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                                <span className="text-primary font-bold text-xl">2</span>
                             </div>
-                            <h3 className="font-semibold text-brand-secondary mb-2">Subscribe to Save</h3>
-                            <p className="text-sm text-brand-muted">
+                            <h3 className="font-semibold text-foreground mb-2">Subscribe to Save</h3>
+                            <p className="text-sm text-muted-foreground">
                                 Full save, share, export, and autosave features unlock with any paid plan.
                             </p>
                         </div>
                         <div className="text-center">
-                            <div className="w-12 h-12 bg-brand-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                                <span className="text-brand-primary font-bold text-xl">3</span>
+                            <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                                <span className="text-primary font-bold text-xl">3</span>
                             </div>
-                            <h3 className="font-semibold text-brand-secondary mb-2">Scale as Needed</h3>
-                            <p className="text-sm text-brand-muted">
+                            <h3 className="font-semibold text-foreground mb-2">Scale as Needed</h3>
+                            <p className="text-sm text-muted-foreground">
                                 Upgrade or downgrade anytime as your team's meeting frequency changes.
                             </p>
                         </div>
@@ -263,40 +264,40 @@ const PricingPage: React.FC = () => {
                 <Separator />
                 
                 {/* FAQ Section */}
-                <div className="bg-brand-surface/50 rounded-2xl p-8">
-                    <h2 className="text-2xl font-bold text-brand-secondary text-center mb-8">
+                <div className="bg-muted/30 rounded-2xl p-8">
+                    <h2 className="text-2xl font-bold text-foreground text-center mb-8">
                         Frequently Asked Questions
                     </h2>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                         <div>
-                            <h3 className="font-semibold text-brand-secondary mb-2">
+                            <h3 className="font-semibold text-foreground mb-2">
                                 What happens after my free meeting?
                             </h3>
-                            <p className="text-sm text-brand-muted">
+                            <p className="text-sm text-muted-foreground">
                                 You can view your generated minutes, but save, share, export, and autosave features require a subscription.
                             </p>
                         </div>
                         <div>
-                            <h3 className="font-semibold text-brand-secondary mb-2">
+                            <h3 className="font-semibold text-foreground mb-2">
                                 Can I change plans anytime?
                             </h3>
-                            <p className="text-sm text-brand-muted">
+                            <p className="text-sm text-muted-foreground">
                                 Yes! Upgrade or downgrade your plan at any time. Changes take effect on your next billing cycle.
                             </p>
                         </div>
                         <div>
-                            <h3 className="font-semibold text-brand-secondary mb-2">
+                            <h3 className="font-semibold text-foreground mb-2">
                                 What if I exceed my meeting limit?
                             </h3>
-                            <p className="text-sm text-brand-muted">
+                            <p className="text-sm text-muted-foreground">
                                 You can purchase additional meetings at the pay-as-you-go rate, or upgrade to a higher plan.
                             </p>
                         </div>
                         <div>
-                            <h3 className="font-semibold text-brand-secondary mb-2">
+                            <h3 className="font-semibold text-foreground mb-2">
                                 Do you offer annual discounts?
                             </h3>
-                            <p className="text-sm text-brand-muted">
+                            <p className="text-sm text-muted-foreground">
                                 Yes! Contact us for annual billing options with significant discounts on all plans.
                             </p>
                         </div>
@@ -305,15 +306,15 @@ const PricingPage: React.FC = () => {
 
                 {/* Bottom CTA */}
                 <div className="text-center mt-16">
-                    <h2 className="text-2xl font-bold text-brand-secondary mb-4">
+                    <h2 className="text-2xl font-bold text-foreground mb-4">
                         Ready to Transform Your Meetings?
                     </h2>
-                    <p className="text-brand-muted mb-8">
+                    <p className="text-muted-foreground mb-8">
                         Start with your free meeting today. No credit card required.
                     </p>
                     <Button 
                         size="lg" 
-                        className="bg-brand-primary hover:bg-brand-primary/90 text-white px-8 py-3"
+                        className="bg-primary hover:bg-primary/90 text-primary-foreground px-8 py-3"
                         onClick={() => handlePlanSelect('Free Trial')}
                     >
                         Start Your Free Meeting
@@ -325,9 +326,9 @@ const PricingPage: React.FC = () => {
             <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
                 <DialogContent className="sm:max-w-md">
                     <DialogHeader>
-                        <DialogTitle className="text-brand-secondary">Confirm Your Plan Selection</DialogTitle>
-                        <DialogDescription className="text-brand-muted">
-                            You've selected the <span className="font-semibold text-brand-primary">{selectedPlan}</span> plan.
+                        <DialogTitle className="text-foreground">Confirm Your Plan Selection</DialogTitle>
+                        <DialogDescription className="text-muted-foreground">
+                            You've selected the <span className="font-semibold text-primary">{selectedPlan}</span> plan.
                             {selectedPlan === 'Free Trial' 
                                 ? ' You can start using the service immediately with no commitment.'
                                 : ' You will be redirected to complete your subscription setup.'
@@ -337,20 +338,20 @@ const PricingPage: React.FC = () => {
                     
                     {selectedPlan && (
                         <div className="py-4">
-                            <div className="bg-brand-surface/30 rounded-lg p-4">
+                            <div className="bg-muted/30 rounded-lg p-4">
                                 <div className="flex items-center justify-between mb-2">
-                                    <span className="font-medium text-brand-secondary">Plan:</span>
-                                    <span className="font-semibold text-brand-primary">{selectedPlan}</span>
+                                    <span className="font-medium text-foreground">Plan:</span>
+                                    <span className="font-semibold text-primary">{selectedPlan}</span>
                                 </div>
                                 {pricingPlans.find(p => p.name === selectedPlan) && (
                                     <>
                                         <div className="flex items-center justify-between mb-2">
-                                            <span className="text-sm text-brand-muted">Price:</span>
-                                            <span className="text-sm font-medium">{pricingPlans.find(p => p.name === selectedPlan)?.price}</span>
+                                            <span className="text-sm text-muted-foreground">Price:</span>
+                                            <span className="text-sm font-medium text-foreground">{pricingPlans.find(p => p.name === selectedPlan)?.price}</span>
                                         </div>
                                         <div className="flex items-center justify-between">
-                                            <span className="text-sm text-brand-muted">Meetings:</span>
-                                            <span className="text-sm font-medium">{pricingPlans.find(p => p.name === selectedPlan)?.includedMeetings}</span>
+                                            <span className="text-sm text-muted-foreground">Meetings:</span>
+                                            <span className="text-sm font-medium text-foreground">{pricingPlans.find(p => p.name === selectedPlan)?.includedMeetings}</span>
                                         </div>
                                     </>
                                 )}
@@ -368,7 +369,7 @@ const PricingPage: React.FC = () => {
                         </Button>
                         <Button 
                             onClick={handleConfirmSelection}
-                            className="flex-1 bg-brand-primary hover:bg-brand-primary/90 text-white"
+                            className="flex-1 bg-primary hover:bg-primary/90 text-primary-foreground"
                         >
                             {selectedPlan === 'Free Trial' ? 'Start Free Trial' : 'Continue to Payment'}
                         </Button>
