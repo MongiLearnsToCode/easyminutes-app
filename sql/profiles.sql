@@ -5,6 +5,7 @@ CREATE TABLE IF NOT EXISTS profiles (
     email TEXT NOT NULL,
     avatar_url TEXT,
     theme_preference TEXT NOT NULL DEFAULT 'system' CHECK (theme_preference IN ('light', 'dark', 'system')),
+    onboarding_completed BOOLEAN NOT NULL DEFAULT FALSE,
     created_at TIMESTAMPTZ DEFAULT NOW() NOT NULL,
     updated_at TIMESTAMPTZ DEFAULT NOW() NOT NULL
 );

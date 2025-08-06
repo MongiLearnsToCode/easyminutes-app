@@ -110,23 +110,33 @@ const OnboardingPage: React.FC<OnboardingPageProps> = ({ onComplete }) => {
                     avatarUrl = await profileService.uploadAvatar(avatarFile);
                 } catch (uploadError) {
                     console.error('Avatar upload failed:', uploadError);
+                    setError('Failed to upload avatar. Please try again.');
                     // Continue with profile creation even if avatar upload fails
                 }
             }
 
             // Create profile
-            await profileService.createInitialProfile({
+            await profileService.completeOnboarding({
                 name: formData.name.trim(),
-                email: formData.email,
                 avatar_url: avatarUrl || undefined,
             });
 
             onComplete();
         } catch (error) {
             console.error('Error creating profile:', error);
-            setError(error instanceof Error ? error.message : 'Failed to complete onboarding');
+            setError(error instanceof Error ? `An error occurred: ${error.message}` : 'Failed to complete onboarding');
         } finally {
             setIsLoading(false);
+        }
+    };
+
+    const handleSkip = async () => {
+        try {
+            await profileService.completeOnboarding({});
+            onComplete();
+        } catch (error) {
+            console.error('Error skipping onboarding:', error);
+            setError(error instanceof Error ? `An error occurred: ${error.message}` : 'Failed to skip onboarding');
         }
     };
 
@@ -254,6 +264,15 @@ const OnboardingPage: React.FC<OnboardingPageProps> = ({ onComplete }) => {
                             ) : (
                                 'Complete Setup'
                             )}
+                        </Button>
+                        <Button
+                            type="button"
+                            variant="ghost"
+                            className="w-full mt-2"
+                            onClick={handleSkip}
+                            disabled={isLoading}
+                        >
+                            Skip for now
                         </Button>
                     </form>
                 </CardContent>
