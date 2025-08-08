@@ -1,5 +1,6 @@
 import { createClient, SupabaseClient, User } from '@supabase/supabase-js';
 import { MeetingSummary } from '../types';
+import { USER_MESSAGES } from '../constants/userMessages';
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || '';
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
@@ -9,7 +10,7 @@ export const supabase: SupabaseClient = createClient(supabaseUrl, supabaseAnonKe
 const getCurrentUser = async (): Promise<User> => {
     const { data: { user }, error } = await supabase.auth.getUser();
     if (error || !user) {
-        throw new Error("User not authenticated. Please log in.");
+        throw new Error(USER_MESSAGES.AUTH.NOT_AUTHENTICATED);
     }
     return user;
 };

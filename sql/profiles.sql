@@ -32,12 +32,13 @@ CREATE POLICY "Users can only delete their own profile" ON profiles
 
 -- Create function to automatically update the updated_at timestamp
 CREATE OR REPLACE FUNCTION update_profiles_updated_at()
-RETURNS TRIGGER AS $$
+RETURNS TRIGGER AS $
 BEGIN
+    -- This comment is added to force a schema cache refresh in Supabase/PostgREST
     NEW.updated_at = NOW();
     RETURN NEW;
 END;
-$$ language 'plpgsql';
+$ language 'plpgsql';
 
 -- Create trigger to automatically update updated_at
 CREATE TRIGGER update_profiles_updated_at_trigger
@@ -47,17 +48,17 @@ CREATE TRIGGER update_profiles_updated_at_trigger
 
 -- Create function to handle new user signup and create profile
 CREATE OR REPLACE FUNCTION public.handle_new_user()
-RETURNS TRIGGER AS $$
+RETURNS TRIGGER AS $
 BEGIN
     INSERT INTO public.profiles (id, name, email)
     VALUES (
         NEW.id,
-        COALESCE(NEW.raw_user_meta_data->>'name', NEW.raw_user_meta_data->>'full_name', split_part(NEW.email, '@', 1)),
-        NEW.email
+        COALESCE(NEW.raw_user_meta_data->>'name', NEW.raw_user_meta_data->>'full_name', split_part(COALESCE(NEW.email, ''), '@', 1), 'New User'),
+        COALESCE(NEW.email, '')
     );
     RETURN NEW;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$ LANGUAGE plpgsql SECURITY DEFINER;
 
 -- Create trigger to automatically create profile on signup
 DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;

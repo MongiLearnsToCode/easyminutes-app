@@ -6,12 +6,13 @@ export interface UserSubscription {
     user_id: string;
     polar_customer_id?: string;
     polar_subscription_id?: string;
-    plan_type: 'free' | 'one_time' | 'starter' | 'pro' | 'enterprise';
+    plan_type: 'trial' | 'pro';
     status: 'active' | 'canceled' | 'past_due' | 'inactive' | 'trialing';
     current_period_start?: string;
     current_period_end?: string;
     meetings_used: number;
     meetings_limit: number;
+    session_generations: number; // Track AI generations in current session
     created_at: string;
     updated_at: string;
 }
@@ -22,38 +23,22 @@ export interface PlanLimits {
     can_export: boolean;
     can_share: boolean;
     has_autosave: boolean;
+    has_audio_transcription: boolean;
+    session_generation_limit: number; // Limit for AI generations per session
     has_priority_support: boolean;
     has_custom_templates: boolean;
     has_api_access: boolean;
 }
 
 const PLAN_LIMITS: Record<string, PlanLimits> = {
-    free: {
-        meetings_limit: 1,
+    trial: {
+        meetings_limit: -1, // No meeting storage limit, but can't save
         can_save: false,
         can_export: false,
         can_share: false,
         has_autosave: false,
-        has_priority_support: false,
-        has_custom_templates: false,
-        has_api_access: false,
-    },
-    one_time: {
-        meetings_limit: 1,
-        can_save: true,
-        can_export: true,
-        can_share: true,
-        has_autosave: false,
-        has_priority_support: false,
-        has_custom_templates: false,
-        has_api_access: false,
-    },
-    starter: {
-        meetings_limit: 30,
-        can_save: true,
-        can_export: true,
-        can_share: true,
-        has_autosave: true,
+        has_audio_transcription: false,
+        session_generation_limit: 5, // 3-5 AI generations per session
         has_priority_support: false,
         has_custom_templates: false,
         has_api_access: false,
@@ -64,19 +49,11 @@ const PLAN_LIMITS: Record<string, PlanLimits> = {
         can_export: true,
         can_share: true,
         has_autosave: true,
+        has_audio_transcription: true,
+        session_generation_limit: -1, // Unlimited
         has_priority_support: true,
         has_custom_templates: true,
         has_api_access: false,
-    },
-    enterprise: {
-        meetings_limit: -1, // Unlimited
-        can_save: true,
-        can_export: true,
-        can_share: true,
-        has_autosave: true,
-        has_priority_support: true,
-        has_custom_templates: true,
-        has_api_access: true,
     },
 };
 
@@ -139,7 +116,7 @@ class SubscriptionService {
      * Get plan limits for a subscription
      */
     getPlanLimits(planType: string): PlanLimits {
-        return PLAN_LIMITS[planType] || PLAN_LIMITS.free;
+        return PLAN_LIMITS[planType] || PLAN_LIMITS.trial;
     }
 
     /**
@@ -149,8 +126,8 @@ class SubscriptionService {
         try {
             const subscription = await this.getUserSubscription();
             if (!subscription) {
-                // User has no subscription, they're on free plan
-                return this.getPlanLimits('free')[action] as boolean;
+                // User has no subscription, they're on trial
+                return this.getPlanLimits('trial')[action] as boolean;
             }
 
             const limits = this.getPlanLimits(subscription.plan_type);
@@ -196,12 +173,13 @@ class SubscriptionService {
         try {
             const subscription = await this.getUserSubscription();
             if (!subscription) {
-                // Create a free subscription record
+                // Create a trial subscription record
                 await this.upsertUserSubscription({
-                    plan_type: 'free',
+                    plan_type: 'trial',
                     status: 'active',
                     meetings_used: 1,
-                    meetings_limit: 1,
+                    meetings_limit: -1,
+                    session_generations: 0,
                     created_at: new Date().toISOString(),
                 });
                 return;
@@ -237,6 +215,94 @@ class SubscriptionService {
     }
 
     /**
+     * Check if user can generate more AI summaries in current session
+     */
+    async canGenerateInSession(): Promise<{ canGenerate: boolean; remainingGenerations: number; isTrialUser: boolean }> {
+        try {
+            const subscription = await this.getUserSubscription();
+            
+            if (!subscription) {
+                // Create trial subscription for new users
+                const newSubscription = await this.upsertUserSubscription({
+                    plan_type: 'trial',
+                    status: 'active',
+                    meetings_used: 0,
+                    meetings_limit: -1,
+                    session_generations: 0,
+                    created_at: new Date().toISOString(),
+                });
+                
+                const limits = this.getPlanLimits('trial');
+                return {
+                    canGenerate: true,
+                    remainingGenerations: limits.session_generation_limit,
+                    isTrialUser: true
+                };
+            }
+
+            const limits = this.getPlanLimits(subscription.plan_type);
+            const isTrialUser = subscription.plan_type === 'trial';
+            
+            if (limits.session_generation_limit === -1) {
+                // Unlimited generations for Pro users
+                return {
+                    canGenerate: true,
+                    remainingGenerations: -1,
+                    isTrialUser: false
+                };
+            }
+
+            const remaining = limits.session_generation_limit - subscription.session_generations;
+            return {
+                canGenerate: remaining > 0,
+                remainingGenerations: remaining,
+                isTrialUser
+            };
+        } catch (error) {
+            console.error('Error checking session generation limit:', error);
+            return { canGenerate: false, remainingGenerations: 0, isTrialUser: true };
+        }
+    }
+
+    /**
+     * Increment session generation count
+     */
+    async incrementSessionGeneration(): Promise<void> {
+        try {
+            const subscription = await this.getUserSubscription();
+            if (!subscription) {
+                // This shouldn't happen if canGenerateInSession was called first
+                throw new Error('No subscription found');
+            }
+
+            await this.upsertUserSubscription({
+                ...subscription,
+                session_generations: subscription.session_generations + 1,
+            });
+        } catch (error) {
+            console.error('Error incrementing session generation:', error);
+            throw new Error('Failed to update session generation count');
+        }
+    }
+
+    /**
+     * Reset session generations (call this when user starts a new session)
+     */
+    async resetSessionGenerations(): Promise<void> {
+        try {
+            const subscription = await this.getUserSubscription();
+            if (subscription) {
+                await this.upsertUserSubscription({
+                    ...subscription,
+                    session_generations: 0,
+                });
+            }
+        } catch (error) {
+            console.error('Error resetting session generations:', error);
+        }
+    }
+
+    /**
      * Get subscription status for display
      */
     async getSubscriptionStatus(): Promise<{
@@ -248,28 +314,29 @@ class SubscriptionService {
         canExport: boolean;
         canShare: boolean;
         hasAutosave: boolean;
+        hasAudioTranscription: boolean;
+        sessionGenerations: number;
+        sessionGenerationLimit: number;
+        isTrialUser: boolean;
     }> {
         const subscription = await this.getUserSubscription();
         
         if (!subscription) {
-            const limits = this.getPlanLimits('free');
-            const user = await this.getCurrentUser();
+            const limits = this.getPlanLimits('trial');
             
-            // Count user's meetings to show usage
-            const { count } = await supabase
-                .from('meetings')
-                .select('*', { count: 'exact', head: true })
-                .eq('user_id', user.id);
-
             return {
-                planType: 'Free',
+                planType: 'Trial',
                 status: 'active',
-                meetingsUsed: count || 0,
+                meetingsUsed: 0,
                 meetingsLimit: limits.meetings_limit,
                 canSave: limits.can_save,
                 canExport: limits.can_export,
                 canShare: limits.can_share,
                 hasAutosave: limits.has_autosave,
+                hasAudioTranscription: limits.has_audio_transcription,
+                sessionGenerations: 0,
+                sessionGenerationLimit: limits.session_generation_limit,
+                isTrialUser: true,
             };
         }
 
@@ -284,6 +351,10 @@ class SubscriptionService {
             canExport: limits.can_export,
             canShare: limits.can_share,
             hasAutosave: limits.has_autosave,
+            hasAudioTranscription: limits.has_audio_transcription,
+            sessionGenerations: subscription.session_generations || 0,
+            sessionGenerationLimit: limits.session_generation_limit,
+            isTrialUser: subscription.plan_type === 'trial',
         };
     }
 }

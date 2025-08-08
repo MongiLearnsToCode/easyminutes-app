@@ -21,7 +21,13 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Skeleton } from '@/components/ui/skeleton';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { ConfirmationDialog } from './ConfirmationDialog';
+// import ProPrompt from './ProPrompt';
 import { useToast } from '@/components/ui/toast';
+import { USER_MESSAGES } from '../constants/userMessages';
+import { useFreeGenGate, gateAndGenerate } from '../lib/useFreeGenGate';
+import BlockingProModal from './BlockingProModal';
+// import BlockingProModal from './BlockingProModal';
+import subscriptionService from '../services/subscriptionService';
 
 type ActiveTab = 'text' | 'voice' | 'upload';
 
@@ -159,7 +165,7 @@ const EditableMinutesDisplay: React.FC<{ summary: MeetingSummary; setSummary: Re
                 <SectionHeader>Action Items</SectionHeader>
                 <ul className="space-y-3">
                     {sanitizedSummary.actionItems.map((item, index) => (
-                        <li key={index} className="flex items-start space-x-4 p-4 bg-white border border-gray-200/80 rounded-xl shadow-sm group">
+                        <li key={index} className="flex items-start space-x-4 p-4 bg-card border border-gray-200/80 rounded-xl shadow-sm group">
                             <CheckCircleIcon className="w-7 h-7 text-green-500 mt-1 flex-shrink-0" />
                             <div className="flex-1 space-y-2">
                                 <input
@@ -190,14 +196,12 @@ className="ml-2 text-xs font-bold text-foreground bg-primary/10 px-2 py-1 rounde
     );
 };
 
-const Dashboard: React.FC<{ onShowAll: () => void; selectedMeetingId: string | null; onSavingStatusChange: (status: { isAutoSaving: boolean; hasUnsavedChanges: boolean; currentSummary: any; } | undefined) => void; }> = ({ onShowAll, selectedMeetingId, onSavingStatusChange }) => {
+const Dashboard: React.FC<{ onShowAll: () => void; selectedMeetingId: string | null; onSavingStatusChange: (status: { isAutoSaving: boolean; hasUnsavedChanges: boolean; currentSummary: any; } | undefined) => void; session: Session | null; currentSummary: any | null; setCurrentSummary: (summary: any | null) => void; onNavigate: (view: 'dashboard' | 'allMeetings' | 'pricing' | 'success' | 'profile' | 'settings') => void; }> = ({ onShowAll, selectedMeetingId, onSavingStatusChange, session, currentSummary, setCurrentSummary, onNavigate }) => {
     const toast = useToast();
     const [activeTab, setActiveTab] = useState<ActiveTab>('text');
     const [inputText, setInputText] = useState('');
     const [transcript, setTranscript] = useState('');
     const [isRecording, setIsRecording] = useState(false);
-    
-    const [currentSummary, setCurrentSummary] = useState<MeetingSummary | null>(null);
     const [originalSummaryForDiff, setOriginalSummaryForDiff] = useState<MeetingSummary | null>(null);
     const [deleteConfirmation, setDeleteConfirmation] = useState<{ isOpen: boolean; meetingId: string | null; meetingTitle: string }>({ isOpen: false, meetingId: null, meetingTitle: '' });
     const [isDeleting, setIsDeleting] = useState(false);
@@ -210,13 +214,28 @@ const Dashboard: React.FC<{ onShowAll: () => void; selectedMeetingId: string | n
     const [uploadedFile, setUploadedFile] = useState<File | null>(null);
     const [audioInput, setAudioInput] = useState<SummarizeAudioInput | null>(null);
     const [isProcessingFile, setIsProcessingFile] = useState(false);
+    // const [proPrompt, setProPrompt] = useState<{ open: boolean; feature: string }>(() => ({ open: false, feature: '' }));
     const [isDragging, setIsDragging] = useState(false);
     const [isAutoSaving, setIsAutoSaving] = useState(false);
     const [copyStatusText, setCopyStatusText] = useState('Copy to Clipboard');
+    const { canGenerate, remaining, increment, requirePro } = useFreeGenGate();
+    const [showProModal, setShowProModal] = useState(false);
+    const openProModal = () => setShowProModal(true);
+    // const [isTrial, setIsTrial] = useState(false);
     
     const recognitionRef = useRef<SpeechRecognition | null>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
     const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+    // useEffect(() => {
+    //     const checkTrialStatus = async () => {
+    //         if (session) {
+    //             const { isTrialUser } = await subscriptionService.getSubscriptionStatus();
+    //             setIsTrial(isTrialUser);
+    //         }
+    //     };
+    //     checkTrialStatus();
+    // }, [session]);
 
 
     const loadMinutesFromDB = useCallback(async () => {
@@ -225,15 +244,20 @@ const Dashboard: React.FC<{ onShowAll: () => void; selectedMeetingId: string | n
             const minutes = await getAllMinutes();
             setSavedMinutes(minutes);
         } catch (e) {
-            setError(e instanceof Error ? e.message : "Could not load saved minutes.");
-            console.error(e);
+// Don't show authentication errors to unauthenticated users
+            if (e instanceof Error && e.message.includes(USER_MESSAGES.AUTH.NOT_AUTHENTICATED)) {
+                console.log('User not authenticated - continuing without saved minutes');
+                setSavedMinutes([]);
+            } else {
+                setError(e instanceof Error ? e.message : "Could not load saved minutes.");
+                console.error(e);
+            }
         }
     }, []);
 
-    useEffect(() => {
-        initDB().then(() => {
-            loadMinutesFromDB();
-        });
+useEffect(() => {
+        // Direct access without login, load initial meeting data
+        loadMinutesFromDB();
     }, [loadMinutesFromDB]);
 
     useEffect(() => {
@@ -303,15 +327,14 @@ const Dashboard: React.FC<{ onShowAll: () => void; selectedMeetingId: string | n
     }, [toast]);
 
     const handleShareByEmail = useCallback((summary: MeetingSummary) => {
-        if (!summary) return;
-        const subject = `Meeting Minutes: ${summary.title}`;
-        const body = formatSummaryAsText(summary);
-        const mailtoLink = `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
-        window.location.href = mailtoLink;
-        toast.info('Opening email client', 'Your default email client should open with the meeting minutes.');
+        toast.info('Email sharing is not available in this build.');
     }, [toast]);
 
     const handleExportDocx = useCallback((summary: MeetingSummary) => {
+        toast.info('DOCX export is not available in this build.');
+    }, [toast]);
+
+    const realHandleExportDocx = useCallback((summary: MeetingSummary) => {
         if (!summary) return;
         const doc = new Document({
             creator: "Easy Minutes",
@@ -369,6 +392,10 @@ const Dashboard: React.FC<{ onShowAll: () => void; selectedMeetingId: string | n
     }, []);
 
     const handleExportPdf = useCallback((summary: MeetingSummary) => {
+        toast.info('PDF export is not available in this build.');
+    }, [toast]);
+
+    const realHandleExportPdf = useCallback((summary: MeetingSummary) => {
         if (!summary) return;
         const doc = new jsPDF();
         const pageWidth = doc.internal.pageSize.getWidth();
@@ -482,22 +509,7 @@ const Dashboard: React.FC<{ onShowAll: () => void; selectedMeetingId: string | n
     }, []);
 
     const toggleRecording = () => {
-        if (!recognitionRef.current) {
-            setError("Speech recognition is not available in your browser.");
-            return;
-        }
-        if (isRecording) {
-            recognitionRef.current.stop();
-            setIsRecording(false);
-            toast.info('Recording stopped', 'Voice recording has been stopped. Your transcript is ready for analysis.');
-        } else {
-            setTranscript('');
-            setError(null);
-            setCurrentSummary(null);
-            recognitionRef.current.start();
-            setIsRecording(true);
-            toast.success('Recording started', 'Voice recording is now active. Start speaking to capture your meeting.');
-        }
+        toast.info('Audio transcription is not available in this build.');
     };
     
     const processFile = useCallback(async (file: File) => {
@@ -532,19 +544,10 @@ const Dashboard: React.FC<{ onShowAll: () => void; selectedMeetingId: string | n
         const { name, type } = file;
         try {
             if (type.startsWith('audio/')) {
-                const reader = new FileReader();
-                reader.onload = (e) => {
-                    const base64 = (e.target?.result as string).split(',')[1];
-                    setAudioInput({ mimeType: type, data: base64 });
-                    setIsProcessingFile(false);
-                    toast.success('Audio file processed!', `${file.name} is ready for transcription and analysis.`);
-                };
-                reader.onerror = () => { 
-                    setError("Failed to read the audio file."); 
-                    setIsProcessingFile(false);
-                    toast.error('Audio processing failed', 'Unable to read the audio file. Please try a different file.');
-                }
-                reader.readAsDataURL(file);
+                setProPrompt({ open: true, feature: 'Audio Transcription' });
+                setUploadedFile(null);
+                setIsProcessingFile(false);
+                return;
             } else if (name.endsWith('.docx')) {
                 const result = await mammoth.extractRawText({ arrayBuffer: await file.arrayBuffer() });
                 setInputText(result.value);
@@ -582,45 +585,58 @@ const Dashboard: React.FC<{ onShowAll: () => void; selectedMeetingId: string | n
         return JSON.stringify(currentSummary) !== JSON.stringify(originalSummaryForDiff);
     }, [currentSummary, originalSummaryForDiff]);
 
+    
+
     const handleGenerate = useCallback(async () => {
-        let inputToSummarize: string | SummarizeAudioInput | null = null;
-        let sourceIsEmpty = true;
-        switch (activeTab) {
-            case 'text':
-                sourceIsEmpty = !inputText.trim();
-                inputToSummarize = inputText;
-                break;
-            case 'voice':
-                sourceIsEmpty = !transcript.trim();
-                inputToSummarize = transcript;
-                break;
-            case 'upload':
-                sourceIsEmpty = !audioInput && !inputText.trim();
-                inputToSummarize = audioInput || inputText;
-                break;
-        }
-        if (sourceIsEmpty || !inputToSummarize) {
-            setError("Please provide some text, a recording, or an uploaded file to summarize.");
-            return;
-        }
-        setIsLoading(true);
-        setError(null);
-        setCurrentSummary(null);
-        setOriginalSummaryForDiff(null);
-        try {
-            const result = await summarizeMinutes(inputToSummarize);
-            const newSummary = await addMinute(result);
-            await loadMinutesFromDB();
-            setCurrentSummary(newSummary);
-            setOriginalSummaryForDiff(newSummary);
-            toast.success('Meeting minutes generated!', 'Your AI-powered meeting summary is ready for review and editing.');
-        } catch (e: unknown) {
-            setError(e instanceof Error ? e.message : "An unexpected error occurred.");
-            toast.error('Generation failed', e instanceof Error ? e.message : 'Unable to generate meeting minutes. Please try again.');
-        } finally {
-            setIsLoading(false);
-        }
-    }, [activeTab, inputText, transcript, audioInput, loadMinutesFromDB]);
+        const result = await gateAndGenerate({ canGenerate, remaining, increment, requirePro, openProModal }, async () => {
+            let inputToSummarize: string | null = inputText.trim(); // Default to text input only
+            if (!inputToSummarize) {
+                setError("Please provide some text to summarize.");
+                return null;
+            }
+            setIsLoading(true);
+            setError(null);
+            setCurrentSummary(null);
+            setOriginalSummaryForDiff(null);
+            try {
+                const result = await summarizeMinutes(inputToSummarize);
+                
+                const newSummary = {
+                    ...result,
+                    id: Date.now().toString(),
+                    createdAt: new Date().toISOString()
+                };
+                
+                setCurrentSummary(newSummary);
+                setOriginalSummaryForDiff(newSummary);
+                
+                // Try to save to database if user is authenticated
+                try {
+                    const savedSummary = await addMinute(result);
+                    setCurrentSummary(savedSummary);
+                    setOriginalSummaryForDiff(savedSummary);
+                    await loadMinutesFromDB();
+                    toast.success('Meeting minutes generated and saved!', 'Your AI-powered meeting summary is ready for review and has been saved.');
+                } catch (saveError) {
+                    // If save fails (user not authenticated), keep the local version
+                    console.log('Unable to save meeting - user may not be authenticated');
+                    if (remaining === 1) {
+                        toast.info('Last free generation!', `You have one free generation left this session.`);
+                    } else if (remaining <= 3) {
+                        toast.info('Free generations remaining', `You have ${remaining - 1} free generations left this session.`);
+                    }
+                    toast.success('Meeting minutes generated!', 'Your AI-powered meeting summary is ready. Sign in to save it permanently.');
+                }
+                return newSummary;
+            } catch (e) {
+                setError(e instanceof Error ? e.message : "An unexpected error occurred.");
+                toast.error('Generation failed', e instanceof Error ? e.message : 'Unable to generate meeting minutes. Please try again.');
+                return null;
+            } finally {
+                setIsLoading(false);
+            }
+        });
+    }, [inputText, loadMinutesFromDB, savedMinutes, requirePro, openProModal, increment, remaining, canGenerate]);
     
     const handleSelectMinute = useCallback((minute: MeetingSummary) => {
         setCurrentSummary(minute);
@@ -636,6 +652,12 @@ const Dashboard: React.FC<{ onShowAll: () => void; selectedMeetingId: string | n
         const handler = setTimeout(async () => {
             if (!currentSummary) return;
             
+            const canAutoSave = await subscriptionService.canPerformAction('has_autosave');
+            if (!canAutoSave) {
+                toast.info('Auto-save is a Pro feature', 'Subscribe to automatically save your changes.');
+                return;
+            }
+
             setIsAutoSaving(true);
             try {
                 // Update timestamp on each save to reflect last modification time
@@ -653,7 +675,7 @@ const Dashboard: React.FC<{ onShowAll: () => void; selectedMeetingId: string | n
         return () => {
             clearTimeout(handler);
         };
-    }, [currentSummary, hasUnsavedChanges, loadMinutesFromDB]);
+    }, [currentSummary, hasUnsavedChanges, loadMinutesFromDB, toast]);
     
     // Pass saving status to parent
     useEffect(() => {
@@ -738,6 +760,7 @@ const Dashboard: React.FC<{ onShowAll: () => void; selectedMeetingId: string | n
 
     return (
         <main className="container mx-auto p-1 sm:p-2 md:p-4 lg:p-8 max-w-7xl">
+
             <div className="grid grid-cols-1 lg:grid-cols-5 gap-3 sm:gap-4 md:gap-6 lg:gap-8 lg:items-start">
                 {/* Left Column - Meeting Notes */}
                 <div className="lg:col-span-2 bg-card p-3 sm:p-4 md:p-6 rounded-xl sm:rounded-2xl shadow-sm flex flex-col space-y-4 sm:space-y-6 order-1 lg:order-1">
@@ -844,7 +867,16 @@ const Dashboard: React.FC<{ onShowAll: () => void; selectedMeetingId: string | n
                             </TabsContent>
                         </Tabs>
                         
-                        <div className="mt-6">
+                        <div className="mt-6 flex flex-col gap-2">
+                            <Button 
+                                onClick={() => toast.info('Sign up to save your minutes.')}
+                                variant="outline"
+                                size="lg"
+                                className="w-full"
+                                disabled={!session}
+                            >
+                                Save
+                            </Button>
                             <Button 
                                 onClick={handleGenerate} 
                                 disabled={isLoading || isProcessingFile} 
@@ -966,33 +998,33 @@ className="flex items-center space-x-1 px-3 py-2 text-sm font-medium text-foregr
                                     <span className="hidden sm:inline">Copy</span>
                                 </button>
                                 <button
-                                    onClick={() => handleShareByEmail(currentSummary!)}
-className="flex items-center space-x-1 px-3 py-2 text-sm font-medium text-foreground bg-muted hover:bg-muted/80 rounded-lg transition-colors"
-                                    title="Share via Email"
+                                    onClick={() => toast.info('Sign up to share your minutes.')}
+                                    className="flex items-center space-x-1 px-3 py-2 text-sm font-medium text-foreground bg-muted hover:bg-muted/80 rounded-lg transition-colors"
+                                    title="Share via Email (Pro)"
+                                    disabled={!session}
                                 >
                                     <MailIcon className="w-4 h-4" />
-                                    <span className="hidden sm:inline">Email</span>
-                                </button>
-                                <DropdownMenu>
+                                    <span className="hidden sm:inline">Email (Pro)</span>
+                                </button>                                <DropdownMenu>
                                     <DropdownMenuTrigger asChild>
                                         <button
 className="flex items-center space-x-1 px-3 py-2 text-sm font-medium text-foreground bg-muted hover:bg-muted/80 rounded-lg transition-colors"
                                             title="Export Options"
+                                            disabled={!session}
                                         >
                                             <ArrowUpTrayIcon className="w-4 h-4" />
                                             <span className="hidden sm:inline">Export</span>
                                         </button>
                                     </DropdownMenuTrigger>
                                     <DropdownMenuContent align="end" className="w-48">
-                                        <DropdownMenuItem onSelect={() => handleExportDocx(currentSummary!)}>
+                                         <DropdownMenuItem onSelect={() => toast.info('Subscribe to Pro to export as .docx')} disabled={!session}>
                                             <FileTextIcon className="w-4 h-4 text-blue-600 mr-2" />
-                                            Export as .docx
+                                            Export as .docx (Pro)
                                         </DropdownMenuItem>
-                                        <DropdownMenuItem onSelect={() => handleExportPdf(currentSummary!)}>
+                                        <DropdownMenuItem onSelect={() => toast.info('Subscribe to Pro to export as .pdf')} disabled={!session}>
                                             <FileTextIcon className="w-4 h-4 text-red-600 mr-2" />
-                                            Export as .pdf
-                                        </DropdownMenuItem>
-                                    </DropdownMenuContent>
+                                            Export as .pdf (Pro)
+                                        </DropdownMenuItem>                                    </DropdownMenuContent>
                                 </DropdownMenu>
                             </div>
                         )}
@@ -1036,6 +1068,16 @@ className="flex items-center space-x-1 px-3 py-2 text-sm font-medium text-foregr
                 variant="destructive"
                 isLoading={isDeleting}
             />
+
+            <BlockingProModal
+                isOpen={showProModal}
+                onClose={() => setShowProModal(false)}
+                onSubscribe={() => {
+                    setShowProModal(false);
+                    onNavigate('pricing');
+                }}
+            />
+
         </main>
     );
 };

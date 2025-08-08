@@ -16,7 +16,7 @@ class ProfileService {
     return data;
   }
 
-  async updateProfile(profile: { name?: string; avatar_url?: string }) {
+  async updateProfile(profile: { full_name?: string; avatar_url?: string }) {
     const { data: { user }, error: userError } = await supabase.auth.getUser();
     if (userError) throw userError;
     if (!user) throw new Error('User not logged in');
@@ -53,15 +53,21 @@ class ProfileService {
     return data.publicUrl;
   }
 
-  async completeOnboarding(profile: { name?: string; avatar_url?: string }) {
+  async completeOnboarding(profile: { full_name?: string; avatar_url?: string }) {
     const { data: { user }, error: userError } = await supabase.auth.getUser();
     if (userError) throw userError;
     if (!user) throw new Error('User not logged in');
 
+     const fallbackName = (profile.full_name && profile.full_name.trim())
+      ? profile.full_name.trim()
+      : (user.user_metadata?.full_name || user.user_metadata?.name || (user.email ? user.email.split('@')[0] : 'User'));
     const { data, error } = await supabase
       .from('profiles')
-      .update({ ...profile, onboarding_completed: true })
-      .eq('id', user.id)
+       .update({
+        full_name: fallbackName,
+        avatar_url: profile.avatar_url,
+        onboarding_completed: true,
+      })      .eq('id', user.id)
       .select()
       .single();
 

@@ -1,4 +1,5 @@
 import { InputValidator } from './inputValidation';
+import { USER_MESSAGES } from '../constants/userMessages';
 
 // Secure file upload utilities
 export class SecureFileUpload {
@@ -48,9 +49,9 @@ export class SecureFileUpload {
       // Check if extension is in allowed list
       const allAllowedTypes = Object.values(this.ALLOWED_FILE_TYPES).flat();
       if (!allAllowedTypes.includes(fileExtension)) {
-        return { 
+return { 
           isValid: false, 
-          error: `File type '${fileExtension}' not supported. Allowed: ${allAllowedTypes.join(', ')}` 
+          error: USER_MESSAGES.FILE.TYPE_NOT_SUPPORTED(fileExtension, allAllowedTypes) 
         };
       }
       

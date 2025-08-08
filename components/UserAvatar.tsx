@@ -84,6 +84,7 @@ const UserAvatar: React.FC<UserAvatarProps> = ({
   };
 
   const getInitials = (name: string): string => {
+    if (!name || typeof name !== 'string') return '?';
     return name
       .split(' ')
       .map(word => word[0])

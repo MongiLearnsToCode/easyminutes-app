@@ -19,9 +19,10 @@ interface HeaderProps {
         hasUnsavedChanges: boolean;
         currentSummary: any;
     };
+    onSignUpClick: () => void;
 }
 
-const Header: React.FC<HeaderProps> = ({ currentView, onNavigate, session, savingStatus }) => {
+const Header: React.FC<HeaderProps> = ({ currentView, onNavigate, session, savingStatus, onSignUpClick }) => {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const { theme, setTheme, actualTheme } = useTheme();
 
@@ -103,6 +104,15 @@ const Header: React.FC<HeaderProps> = ({ currentView, onNavigate, session, savin
                                 onProfileClick={() => onNavigate('profile')}
                                 onSettingsClick={() => onNavigate('settings')}
                             />
+                        )}
+                        {!session && (
+                            <Button 
+                                variant="default"
+                                size="sm"
+                                onClick={onSignUpClick}
+                            >
+                                Sign Up
+                            </Button>
                         )}
                         {/* Mobile/Tablet Hamburger Menu */}
                         <Sheet open={isMenuOpen} onOpenChange={setIsMenuOpen}>
@@ -187,6 +197,7 @@ const Header: React.FC<HeaderProps> = ({ currentView, onNavigate, session, savin
                 </div>
             </div>
         </header>
+        
         </>
     );
 };
