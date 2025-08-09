@@ -39,7 +39,7 @@ const PricingPage: React.FC = () => {
         const successUrl = window.location.origin + '?checkout_id={CHECKOUT_SESSION_ID}';
         const priceId = import.meta.env.VITE_POLAR_PRICE_PRO;
 
-        if (!priceId) {
+        if (!priceId) { 
             throw new Error('Pro plan price ID is not configured.');
         }
 

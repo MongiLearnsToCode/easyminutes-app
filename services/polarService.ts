@@ -22,7 +22,7 @@ try {
     if (isConfigured()) {
         polar = new Polar({
             accessToken: import.meta.env.VITE_POLAR_ACCESS_TOKEN,
-            server: getServerUrl(),
+            serverURL: getServerUrl(),
         });
     } else {
         console.warn('⚠️ Polar SDK not configured. Set VITE_POLAR_ACCESS_TOKEN in .env.local');
@@ -158,6 +158,7 @@ class PolarService {
             });
 
             if (!response.result) {
+                console.error('Polar API did not return a checkout session. Full response:', response);
                 throw new Error('No checkout session returned from Polar');
             }
 
