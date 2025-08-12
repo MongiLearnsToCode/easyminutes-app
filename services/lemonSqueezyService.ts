@@ -21,17 +21,24 @@ class LemonSqueezyService {
       throw new Error('Lemon Squeezy client not initialized.');
     }
 
-    const checkout = await createCheckout(storeId!, variantId, {
-      custom: {
-        user_email: userEmail,
-      },
-      checkout_data: {
-        email: userEmail,
-      },
-      redirect_url: successUrl,
-    });
+    try {
+      const checkout = await createCheckout(storeId!, variantId, {
+        checkout_data: {
+          email: userEmail,
+          custom: {
+            user_email: userEmail,
+          },
+        },
+        product_options: {
+          redirect_url: successUrl,
+        },
+      });
 
-    return checkout.data.attributes.url;
+      return checkout.data.attributes.url;
+    } catch (error) {
+      console.error('Error creating checkout session:', error);
+      throw error;
+    }
   }
 
   async getCheckoutSession(checkoutId: string) {
