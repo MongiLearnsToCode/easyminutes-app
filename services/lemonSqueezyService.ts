@@ -22,15 +22,20 @@ class LemonSqueezyService {
     }
 
     try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        throw new Error('User not authenticated.');
+      }
+
       const checkout = await createCheckout(storeId!, variantId, {
-        checkout_data: {
+        checkoutData: {
           email: userEmail,
           custom: {
-            user_email: userEmail,
+            user_id: user.id,
           },
         },
-        product_options: {
-          redirect_url: successUrl,
+        productOptions: {
+          redirectUrl: successUrl,
         },
       });
 
