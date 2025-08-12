@@ -4,8 +4,8 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Loader2 } from 'lucide-react';
-import { polarService } from '../services/polarService';
 import { subscriptionService } from '../services/subscriptionService';
+import { lemonSqueezyService } from '../services/lemonSqueezyService';
 
 interface SuccessPageProps {
     onNavigate: (view: 'dashboard' | 'allMeetings' | 'pricing') => void;
@@ -24,44 +24,28 @@ const SuccessPage: React.FC<SuccessPageProps> = ({ onNavigate }) => {
             try {
                 // Extract checkout session ID from URL parameters
                 const urlParams = new URLSearchParams(window.location.search);
-                const sessionId = urlParams.get('session_id') || urlParams.get('checkout_id');
+                const checkoutId = urlParams.get('checkout');
                 
-                if (!sessionId) {
-                    throw new Error('No session ID found in URL parameters');
+                if (!checkoutId) {
+                    throw new Error('No checkout ID found in URL parameters');
                 }
 
-                // Wait a moment for payment processing to complete
-                await new Promise(resolve => setTimeout(resolve, 2000));
+                // Verify the subscription status with Lemon Squeezy
+                const checkout = await lemonSqueezyService.getCheckoutSession(checkoutId);
 
-                // Verify the subscription status with Polar
-                // Note: You might need to implement a webhook or server-side verification
-                // For now, we'll assume the payment was successful and activate the subscription
-                
-                const planTypeMap: Record<string, 'one_time' | 'starter' | 'pro' | 'enterprise'> = {
-                    'price_one_time': 'one_time',
-                    'price_starter': 'starter',
-                    'price_pro': 'pro',
-                    'price_enterprise': 'enterprise',
-                };
+                if (checkout.data.attributes.status !== 'paid') {
+                    throw new Error('Checkout session not paid yet.');
+                }
 
-                // In a real implementation, you would:
-                // 1. Verify the payment with Polar's API
-                // 2. Get the product/price details from the session
-                // 3. Update the user's subscription accordingly
-                
-                // For now, we'll simulate this process
-                const planType = 'starter'; // This should come from the actual checkout session
+                const planType = checkout.data.attributes.variant_name.toLowerCase() as 'pro' | 'trial';
                 
                 await subscriptionService.upsertUserSubscription({
                     plan_type: planType,
                     status: 'active',
                     meetings_used: 0,
-                    meetings_limit: planType === 'enterprise' ? -1 : 
-                                  planType === 'pro' ? 100 : 
-                                  planType === 'starter' ? 30 : 1,
+                    meetings_limit: planType === 'pro' ? 100 : 1,
                     current_period_start: new Date().toISOString(),
-                    current_period_end: planType === 'one_time' ? undefined : 
-                                       new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+                    current_period_end: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
                     created_at: new Date().toISOString(),
                 });
 

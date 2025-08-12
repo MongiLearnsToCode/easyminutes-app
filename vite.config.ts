@@ -38,7 +38,6 @@ export default defineConfig(({ mode }) => {
               'utils-vendor': ['dompurify', 'file-saver', 'class-variance-authority', 'clsx', 'tailwind-merge'],
               // Feature-based chunks
               'ai-services': ['./services/geminiService.ts'],
-              'payment-services': ['./services/polarService.ts', '@polar-sh/sdk'],
             }
           }
         },

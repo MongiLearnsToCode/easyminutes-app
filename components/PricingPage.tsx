@@ -1,10 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import PricingCard from './PricingCard';
 import { subscriptionService, PlanLimits } from '../services/subscriptionService';
-import { polarService } from '../services/polarService';
+import { lemonSqueezyService } from '../services/lemonSqueezyService';
 import { supabase } from '../services/dbService';
 import { USER_MESSAGES } from '../constants/userMessages';
-import { isSandboxMode, logDevInfo } from '../config/polar-dev';
 
 const PricingPage: React.FC = () => {
   const [plans, setPlans] = useState<{ [key: string]: PlanLimits }>({});
@@ -36,27 +35,16 @@ const PricingPage: React.FC = () => {
             throw new Error(USER_MESSAGES.AUTH.SIGN_IN_TO_SAVE);
         }
 
-        const successUrl = window.location.origin + '?checkout_id={CHECKOUT_SESSION_ID}';
-        const priceId = import.meta.env.VITE_POLAR_PRICE_PRO;
-
-        if (!priceId) { 
-            throw new Error('Pro plan price ID is not configured.');
+        const variantId = import.meta.env.VITE_LEMONSQUEEZY_VARIANT_ID;
+        if (!variantId) {
+            throw new Error('Lemon Squeezy variant ID not set.');
         }
 
-        logDevInfo('Creating checkout session', {
-            plan: 'Pro',
-            priceId: priceId,
-            email: user.data.user.email,
-            successUrl
-        });
+        const successUrl = window.location.origin + '/success';
 
-        const checkoutSession = await polarService.createCheckoutSession({
-            product_price_id: priceId,
-            success_url: successUrl,
-            customer_email: user.data.user.email || '',
-        });
+        const checkoutUrl = await lemonSqueezyService.createCheckoutUrl(variantId, user.data.user.email!, successUrl);
 
-        window.location.href = checkoutSession.url;
+        window.location.href = checkoutUrl;
 
     } catch (err) {
         console.error('Error creating checkout session:', err);

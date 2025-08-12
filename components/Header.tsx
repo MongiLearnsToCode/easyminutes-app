@@ -8,7 +8,6 @@ import { supabase } from '../services/dbService';
 import { LogoIcon, SpinnerIcon, CheckCircleIcon } from '../constants';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
-import { isSandboxMode } from '../config/polar-dev';
 
 interface HeaderProps {
     currentView: 'dashboard' | 'allMeetings' | 'pricing' | 'success' | 'profile' | 'settings';
@@ -51,12 +50,6 @@ const Header: React.FC<HeaderProps> = ({ currentView, onNavigate, session, savin
 
     return (
         <>
-            {/* Sandbox Banner */}
-            {isSandboxMode() && (
-                <div className="bg-amber-100 border-b border-amber-200 text-amber-800 text-center py-2 px-4 text-sm font-medium">
-                    🧪 SANDBOX MODE - Test payments only • Use card 4242 4242 4242 4242
-                </div>
-            )}
             <header className="bg-background/80 backdrop-blur-sm sticky top-0 z-20 border-b border-border">
             <div className="container mx-auto px-4 sm:px-6 lg:px-8">
                 <div className="flex items-center justify-between h-14 sm:h-16">

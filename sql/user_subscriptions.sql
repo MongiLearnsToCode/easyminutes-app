@@ -2,8 +2,9 @@
 CREATE TABLE IF NOT EXISTS user_subscriptions (
     id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
     user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
-    polar_customer_id TEXT,
-    polar_subscription_id TEXT,
+    lemonsqueezy_customer_id TEXT,
+    lemonsqueezy_subscription_id TEXT,
+    lemonsqueezy_order_id TEXT,
     plan_type TEXT NOT NULL DEFAULT 'free' CHECK (plan_type IN ('free', 'one_time', 'starter', 'pro', 'enterprise')),
     status TEXT NOT NULL DEFAULT 'inactive' CHECK (status IN ('active', 'canceled', 'past_due', 'inactive', 'trialing')),
     current_period_start TIMESTAMPTZ,
@@ -18,8 +19,9 @@ CREATE TABLE IF NOT EXISTS user_subscriptions (
     
     -- Indexes for performance
     INDEX idx_user_subscriptions_user_id (user_id),
-    INDEX idx_user_subscriptions_polar_customer_id (polar_customer_id),
-    INDEX idx_user_subscriptions_polar_subscription_id (polar_subscription_id),
+    INDEX idx_user_subscriptions_lemonsqueezy_customer_id (lemonsqueezy_customer_id),
+    INDEX idx_user_subscriptions_lemonsqueezy_subscription_id (lemonsqueezy_subscription_id),
+    INDEX idx_user_subscriptions_lemonsqueezy_order_id (lemonsqueezy_order_id),
     INDEX idx_user_subscriptions_status (status),
     INDEX idx_user_subscriptions_plan_type (plan_type)
 );

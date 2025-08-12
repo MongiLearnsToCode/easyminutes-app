@@ -4,8 +4,9 @@ import { User } from '@supabase/supabase-js';
 export interface UserSubscription {
     id: string;
     user_id: string;
-    polar_customer_id?: string;
-    polar_subscription_id?: string;
+    lemonsqueezy_customer_id?: string;
+    lemonsqueezy_subscription_id?: string;
+    lemonsqueezy_order_id?: string;
     plan_type: 'trial' | 'pro';
     status: 'active' | 'canceled' | 'past_due' | 'inactive' | 'trialing';
     current_period_start?: string;
