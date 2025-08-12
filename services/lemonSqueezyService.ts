@@ -1,5 +1,6 @@
 
 import { lemonSqueezySetup, createCheckout, getCheckout } from '@lemonsqueezy/lemonsqueezy.js';
+import { supabase } from './dbService';
 
 const apiKey = import.meta.env.VITE_LEMONSQUEEZY_API_KEY;
 const storeId = import.meta.env.VITE_LEMONSQUEEZY_STORE_ID;
