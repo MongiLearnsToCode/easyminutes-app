@@ -1,26 +1,27 @@
 
-import { LemonsqueezyClient } from '@lemonsqueezy/lemonsqueezy.js';
+import { lemonSqueezySetup, createCheckout, getCheckout } from '@lemonsqueezy/lemonsqueezy.js';
 
 const apiKey = import.meta.env.VITE_LEMONSQUEEZY_API_KEY;
 const storeId = import.meta.env.VITE_LEMONSQUEEZY_STORE_ID;
 
-let client: LemonsqueezyClient | null = null;
+let isInitialized = false;
 
 if (apiKey && storeId) {
-  client = new LemonsqueezyClient(apiKey);
+  lemonSqueezySetup({
+    apiKey,
+  });
+  isInitialized = true;
 } else {
   console.warn('Lemon Squeezy API key or store ID not set. Lemon Squeezy service will not be available.');
 }
 
 class LemonSqueezyService {
   async createCheckoutUrl(variantId: string, userEmail: string, successUrl: string) {
-    if (!client) {
+    if (!isInitialized) {
       throw new Error('Lemon Squeezy client not initialized.');
     }
 
-    const checkout = await client.createCheckout({
-      storeId: parseInt(storeId!),
-      variantId: parseInt(variantId),
+    const checkout = await createCheckout(storeId!, variantId, {
       custom: {
         user_email: userEmail,
       },
@@ -30,15 +31,15 @@ class LemonSqueezyService {
       redirect_url: successUrl,
     });
 
-    return checkout.url;
+    return checkout.data.attributes.url;
   }
 
   async getCheckoutSession(checkoutId: string) {
-    if (!client) {
+    if (!isInitialized) {
       throw new Error('Lemon Squeezy client not initialized.');
     }
 
-    return await client.getCheckout({ id: checkoutId });
+    return await getCheckout(checkoutId);
   }
 }
 
