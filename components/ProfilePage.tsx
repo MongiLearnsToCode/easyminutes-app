@@ -8,9 +8,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
 import { Loader2, Upload, X, Save, ArrowLeft, User, Mail, Calendar, Palette } from 'lucide-react';
-import { profileService } from '../services/profileService';
-import { subscriptionService } from '../services/subscriptionService';
-import { UserProfile } from '../types';
+import { useGetUserProfile, useUpdateUserProfile } from '../services/profileService';
 import { useTheme } from '../contexts/ThemeContext';
 import { Switch } from '@/components/ui/switch';
 
@@ -19,8 +17,8 @@ interface ProfilePageProps {
 }
 
 const ProfilePage: React.FC<ProfilePageProps> = ({ onBack }) => {
-    const [profile, setProfile] = useState<UserProfile | null>(null);
-    const [subscriptionStatus, setSubscriptionStatus] = useState<any>(null);
+    const profile = useGetUserProfile();
+    const updateUserProfile = useUpdateUserProfile();
     const [formData, setFormData] = useState({
         name: '',
         email: '',
@@ -36,39 +34,17 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ onBack }) => {
 
     const { theme, setTheme } = useTheme();
 
-    // Load profile data on mount
     useEffect(() => {
-        const loadProfileData = async () => {
-            try {
-                setIsLoading(true);
-                
-                // Load profile and subscription status in parallel
-                const [profileData, subscriptionData] = await Promise.all([
-                    profileService.getProfile(),
-                    subscriptionService.getSubscriptionStatus()
-                ]);
-
-                if (profileData) {
-                    setProfile(profileData);
-                    setFormData({
-                        name: profileData.name,
-                        email: profileData.email,
-                        avatar_url: profileData.avatar_url || '',
-                    });
-                    setAvatarPreview(profileData.avatar_url || '');
-                }
-
-                setSubscriptionStatus(subscriptionData);
-            } catch (error) {
-                console.error('Error loading profile data:', error);
-                setError('Failed to load profile data');
-            } finally {
-                setIsLoading(false);
-            }
-        };
-
-        loadProfileData();
-    }, []);
+        if (profile) {
+            setFormData({
+                name: profile.name,
+                email: profile.email,
+                avatar_url: profile.avatar_url || '',
+            });
+            setAvatarPreview(profile.avatar_url || '');
+            setIsLoading(false);
+        }
+    }, [profile]);
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target;
@@ -76,61 +52,6 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ onBack }) => {
             ...prev,
             [name]: value
         }));
-    };
-
-    const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const file = e.target.files?.[0];
-        if (file) {
-            // Validate file type
-            if (!file.type.startsWith('image/')) {
-                setError('Please select an image file');
-                return;
-            }
-
-            // Validate file size (2MB limit)
-            if (file.size > 2 * 1024 * 1024) {
-                setError('Avatar image must be less than 2MB');
-                return;
-            }
-
-            setAvatarFile(file);
-            
-            // Create preview
-            const reader = new FileReader();
-            reader.onload = (e) => {
-                setAvatarPreview(e.target?.result as string);
-            };
-            reader.readAsDataURL(file);
-            setError('');
-        }
-    };
-
-    const removeAvatar = async () => {
-        if (profile?.avatar_url) {
-            try {
-                await profileService.deleteAvatar();
-                setAvatarPreview('');
-                setAvatarFile(null);
-                setSuccess('Avatar removed successfully');
-                
-                // Refresh profile data
-                const updatedProfile = await profileService.getProfile();
-                if (updatedProfile) {
-                    setProfile(updatedProfile);
-                    setFormData(prev => ({ ...prev, avatar_url: '' }));
-                }
-            } catch (error) {
-                setError('Failed to remove avatar');
-            }
-        } else {
-            setAvatarFile(null);
-            setAvatarPreview('');
-            // Reset file input
-            const fileInput = document.getElementById('avatar-upload') as HTMLInputElement;
-            if (fileInput) {
-                fileInput.value = '';
-            }
-        }
     };
 
     const handleSave = async () => {
@@ -145,33 +66,11 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ onBack }) => {
         }
 
         try {
-            let avatarUrl = formData.avatar_url;
-
-            // Upload new avatar if selected
-            if (avatarFile) {
-                try {
-                    avatarUrl = await profileService.uploadAvatar(avatarFile);
-                } catch (uploadError) {
-                    console.error('Avatar upload failed:', uploadError);
-                    setError('Failed to upload avatar, but profile will be saved');
-                }
-            }
-
-            // Update profile
-            const updatedProfile = await profileService.updateProfile({
+            await updateUserProfile({
                 name: formData.name.trim(),
-                email: formData.email,
-                avatar_url: avatarUrl || null,
+                avatar_url: formData.avatar_url || null,
             });
 
-            setProfile(updatedProfile);
-            setFormData({
-                name: updatedProfile.name,
-                email: updatedProfile.email,
-                avatar_url: updatedProfile.avatar_url || '',
-            });
-            setAvatarPreview(updatedProfile.avatar_url || '');
-            setAvatarFile(null);
             setIsEditing(false);
             setSuccess('Profile updated successfully');
         } catch (error) {
@@ -193,14 +92,6 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ onBack }) => {
             .join('')
             .toUpperCase()
             .slice(0, 2);
-    };
-
-    const formatDate = (dateString: string) => {
-        return new Date(dateString).toLocaleDateString('en-US', {
-            year: 'numeric',
-            month: 'long',
-            day: 'numeric'
-        });
     };
 
     if (isLoading) {
@@ -273,38 +164,7 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ onBack }) => {
                                         {profile?.name ? getInitials(profile.name) : 'U'}
                                     </AvatarFallback>
                                 </Avatar>
-                                {isEditing && avatarPreview && (
-                                    <button
-                                        type="button"
-                                        onClick={removeAvatar}
-                                        className="absolute -top-2 -right-2 bg-destructive text-destructive-foreground rounded-full p-1 h-6 w-6 flex items-center justify-center hover:bg-destructive/80 transition-colors"
-                                    >
-                                        <X className="h-3 w-3" />
-                                    </button>
-                                )}
                             </div>
-                            
-                            {isEditing && (
-                                <div className="flex flex-col space-y-2">
-                                    <label
-                                        htmlFor="avatar-upload"
-                                        className="cursor-pointer flex items-center space-x-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
-                                    >
-                                        <Upload className="h-4 w-4" />
-                                        <span>Change Avatar</span>
-                                    </label>
-                                    <input
-                                        id="avatar-upload"
-                                        type="file"
-                                        accept="image/*"
-                                        onChange={handleAvatarChange}
-                                        className="hidden"
-                                    />
-                                    <p className="text-xs text-muted-foreground">
-                                        JPG, PNG or GIF, max 2MB
-                                    </p>
-                                </div>
-                            )}
                         </div>
 
                         {/* Form Fields */}
@@ -418,63 +278,6 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ onBack }) => {
                         </div>
                     </CardContent>
                 </Card>
-
-                {/* Subscription Status Card */}
-                {subscriptionStatus && (
-                    <Card>
-                        <CardHeader>
-                            <CardTitle className="flex items-center space-x-2">
-                                <Badge variant="outline" className="mr-2">
-                                    {subscriptionStatus.planType}
-                                </Badge>
-                                <span>Subscription Details</span>
-                            </CardTitle>
-                        </CardHeader>
-                        <CardContent className="space-y-4">
-                            <div className="grid grid-cols-2 gap-4">
-                                <div>
-                                    <Label className="text-sm text-muted-foreground">Status</Label>
-                                    <p className="font-medium capitalize">{subscriptionStatus.status}</p>
-                                </div>
-                                <div>
-                                    <Label className="text-sm text-muted-foreground">Meetings Used</Label>
-                                    <p className="font-medium">
-                                        {subscriptionStatus.meetingsUsed} / {subscriptionStatus.meetingsLimit === -1 ? '∞' : subscriptionStatus.meetingsLimit}
-                                    </p>
-                                </div>
-                            </div>
-                            
-                            <div className="flex flex-wrap gap-2">
-                                {subscriptionStatus.canSave && <Badge variant="secondary">Save Meetings</Badge>}
-                                {subscriptionStatus.canExport && <Badge variant="secondary">Export</Badge>}
-                                {subscriptionStatus.canShare && <Badge variant="secondary">Share</Badge>}
-                                {subscriptionStatus.hasAutosave && <Badge variant="secondary">Auto-save</Badge>}
-                            </div>
-                        </CardContent>
-                    </Card>
-                )}
-
-                {/* Account Info Card */}
-                {profile && (
-                    <Card>
-                        <CardHeader>
-                            <CardTitle className="flex items-center space-x-2">
-                                <Calendar className="h-5 w-5" />
-                                <span>Account Information</span>
-                            </CardTitle>
-                        </CardHeader>
-                        <CardContent className="space-y-2">
-                            <div className="flex justify-between">
-                                <span className="text-muted-foreground">Member since</span>
-                                <span className="font-medium">{formatDate(profile.created_at)}</span>
-                            </div>
-                            <div className="flex justify-between">
-                                <span className="text-muted-foreground">Last updated</span>
-                                <span className="font-medium">{formatDate(profile.updated_at)}</span>
-                            </div>
-                        </CardContent>
-                    </Card>
-                )}
             </div>
         </div>
     );

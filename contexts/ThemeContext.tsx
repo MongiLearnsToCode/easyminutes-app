@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import { profileService } from '../services/profileService';
-import { supabase } from '../services/dbService';
+import { useGetUserProfile, useUpdateUserProfile } from '../services/profileService';
+import { useConvexAuth } from 'convex/react';
+
 type Theme = 'light' | 'dark' | 'system';
 
 interface ThemeContextType {
@@ -27,51 +28,23 @@ interface ThemeProviderProps {
 export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
   const [theme, setTheme] = useState<Theme>('system');
   const [actualTheme, setActualTheme] = useState<'light' | 'dark'>('light');
+  const { isAuthenticated, isLoading: authLoading } = useConvexAuth();
+  const profile = useGetUserProfile();
+  const updateUserProfile = useUpdateUserProfile();
   const [isLoading, setIsLoading] = useState(true);
 
-  // Load theme from profile on mount
   useEffect(() => {
-    const loadTheme = async () => {
-      try {
-        // Check if user is authenticated
-        const { data: { user } } = await supabase.auth.getUser();
-        
-        if (user) {
-          // Try to get theme from user profile
-          try {
-            const profile = await profileService.getProfile();
-            if (profile?.theme_preference) {
-              setTheme(profile.theme_preference);
-            } else {
-              // Fallback to localStorage
-              const stored = localStorage.getItem('theme') as Theme;
-              setTheme(stored || 'system');
-            }
-          } catch (error) {
-            console.log('Profile not yet available, using localStorage');
-            // Fallback to localStorage if profile doesn't exist yet
-            const stored = localStorage.getItem('theme') as Theme;
-            setTheme(stored || 'system');
-          }
-        } else {
-          // User not authenticated, use localStorage
-          const stored = localStorage.getItem('theme') as Theme;
-          setTheme(stored || 'system');
-        }
-      } catch (error) {
-        console.error('Error loading theme:', error);
-        // Fallback to localStorage
+    if (!authLoading) {
+      if (isAuthenticated && profile) {
+        setTheme(profile.theme_preference || 'system');
+      } else {
         const stored = localStorage.getItem('theme') as Theme;
         setTheme(stored || 'system');
-      } finally {
-        setIsLoading(false);
       }
-    };
+      setIsLoading(false);
+    }
+  }, [authLoading, isAuthenticated, profile]);
 
-    loadTheme();
-  }, []);
-
-  // Update theme in DOM
   useEffect(() => {
     const root = window.document.documentElement;
     
@@ -95,22 +68,15 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
     }
   }, [theme]);
 
-  // Custom setTheme function that persists to both localStorage and profile
   const handleSetTheme = async (newTheme: Theme) => {
     setTheme(newTheme);
-    
-    // Save to localStorage immediately
     localStorage.setItem('theme', newTheme);
-    
-    // Try to save to user profile if authenticated
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user) {
-        await profileService.updateThemePreference(newTheme);
+    if (isAuthenticated) {
+      try {
+        await updateUserProfile({ theme_preference: newTheme });
+      } catch (error) {
+        console.error('Failed to update theme preference:', error);
       }
-    } catch (error) {
-      console.log('Could not save theme to profile:', error);
-      // This is not critical, theme is still saved in localStorage
     }
   };
 
