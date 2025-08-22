@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -7,8 +7,8 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Loader2, Upload, X } from 'lucide-react';
 import { LogoIcon } from '../constants';
-import { profileService } from '../services/profileService';
-import { supabase } from '../services/dbService';
+import { useCreateUser } from '../services/profileService';
+import { useConvexAuth } from 'convex/react';
 
 interface OnboardingPageProps {
     onComplete: () => void;
@@ -18,32 +18,21 @@ const OnboardingPage: React.FC<OnboardingPageProps> = ({ onComplete }) => {
     const [formData, setFormData] = useState({
         name: '',
         email: '',
-        avatar_url: '',
     });
-    const [avatarFile, setAvatarFile] = useState<File | null>(null);
-    const [avatarPreview, setAvatarPreview] = useState<string>('');
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string>('');
+    const { user } = useConvexAuth();
+    const createUser = useCreateUser();
 
-    // Load user email from auth on mount
-    React.useEffect(() => {
-        const loadUserEmail = async () => {
-            try {
-                const { data: { user } } = await supabase.auth.getUser();
-                if (user?.email) {
-                    setFormData(prev => ({
-                        ...prev,
-                        email: user.email!,
-                        name: user.user_metadata?.name || user.user_metadata?.full_name || ''
-                    }));
-                }
-            } catch (error) {
-                console.error('Error loading user email:', error);
-            }
-        };
-
-        loadUserEmail();
-    }, []);
+    useEffect(() => {
+        if (user) {
+            setFormData(prev => ({
+                ...prev,
+                email: user.email!,
+                name: user.fullName || user.email?.split('@')[0] || ''
+            }));
+        }
+    }, [user]);
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target;
@@ -51,43 +40,6 @@ const OnboardingPage: React.FC<OnboardingPageProps> = ({ onComplete }) => {
             ...prev,
             [name]: value
         }));
-    };
-
-    const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const file = e.target.files?.[0];
-        if (file) {
-            // Validate file type
-            if (!file.type.startsWith('image/')) {
-                setError('Please select an image file');
-                return;
-            }
-
-            // Validate file size (2MB limit)
-            if (file.size > 2 * 1024 * 1024) {
-                setError('Avatar image must be less than 2MB');
-                return;
-            }
-
-            setAvatarFile(file);
-            
-            // Create preview
-            const reader = new FileReader();
-            reader.onload = (e) => {
-                setAvatarPreview(e.target?.result as string);
-            };
-            reader.readAsDataURL(file);
-            setError('');
-        }
-    };
-
-    const removeAvatar = () => {
-        setAvatarFile(null);
-        setAvatarPreview('');
-        // Reset file input
-        const fileInput = document.getElementById('avatar-upload') as HTMLInputElement;
-        if (fileInput) {
-            fileInput.value = '';
-        }
     };
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -102,23 +54,9 @@ const OnboardingPage: React.FC<OnboardingPageProps> = ({ onComplete }) => {
         }
 
         try {
-            let avatarUrl = '';
-
-            // Upload avatar if selected
-            if (avatarFile) {
-                try {
-                    avatarUrl = await profileService.uploadAvatar(avatarFile);
-                } catch (uploadError) {
-                    console.error('Avatar upload failed:', uploadError);
-                    setError('Failed to upload avatar. Please try again.');
-                    // Continue with profile creation even if avatar upload fails
-                }
-            }
-
-            // Create profile
-            await profileService.completeOnboarding({
+            await createUser({
                 name: formData.name.trim(),
-                avatar_url: avatarUrl || undefined,
+                email: formData.email,
             });
 
             onComplete();
@@ -132,7 +70,10 @@ const OnboardingPage: React.FC<OnboardingPageProps> = ({ onComplete }) => {
 
     const handleSkip = async () => {
         try {
-            await profileService.completeOnboarding({});
+            await createUser({
+                name: formData.name.trim(),
+                email: formData.email,
+            });
             onComplete();
         } catch (error) {
             console.error('Error skipping onboarding:', error);
@@ -173,50 +114,6 @@ const OnboardingPage: React.FC<OnboardingPageProps> = ({ onComplete }) => {
                                 </AlertDescription>
                             </Alert>
                         )}
-
-                        {/* Avatar Upload */}
-                        <div className="flex flex-col items-center space-y-4">
-                            <div className="relative">
-                                <Avatar className="h-20 w-20">
-                                    <AvatarImage 
-                                        src={avatarPreview} 
-                                        alt="Avatar preview" 
-                                    />
-                                    <AvatarFallback className="text-lg">
-                                        {formData.name ? getInitials(formData.name) : 'U'}
-                                    </AvatarFallback>
-                                </Avatar>
-                                {avatarPreview && (
-                                    <button
-                                        type="button"
-                                        onClick={removeAvatar}
-                                        className="absolute -top-2 -right-2 bg-destructive text-destructive-foreground rounded-full p-1 h-6 w-6 flex items-center justify-center hover:bg-destructive/80 transition-colors"
-                                    >
-                                        <X className="h-3 w-3" />
-                                    </button>
-                                )}
-                            </div>
-                            
-                            <div className="flex flex-col items-center">
-                                <label
-                                    htmlFor="avatar-upload"
-                                    className="cursor-pointer flex items-center space-x-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
-                                >
-                                    <Upload className="h-4 w-4" />
-                                    <span>Upload Avatar (Optional)</span>
-                                </label>
-                                <input
-                                    id="avatar-upload"
-                                    type="file"
-                                    accept="image/*"
-                                    onChange={handleAvatarChange}
-                                    className="hidden"
-                                />
-                                <p className="text-xs text-muted-foreground mt-1">
-                                    JPG, PNG or GIF, max 2MB
-                                </p>
-                            </div>
-                        </div>
 
                         {/* Name Field */}
                         <div className="space-y-2">
