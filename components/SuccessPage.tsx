@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Loader2 } from 'lucide-react';
 import { subscriptionService } from '../services/subscriptionService';
-import { lemonSqueezyService } from '../services/lemonSqueezyService';
+import { polarService } from '../services/polarService';
 
 interface SuccessPageProps {
     onNavigate: (view: 'dashboard' | 'allMeetings' | 'pricing') => void;
@@ -24,14 +24,14 @@ const SuccessPage: React.FC<SuccessPageProps> = ({ onNavigate }) => {
             try {
                 // Extract checkout session ID from URL parameters
                 const urlParams = new URLSearchParams(window.location.search);
-                const checkoutId = urlParams.get('checkout');
+                const checkoutId = urlParams.get('checkout_id');
                 
                 if (!checkoutId) {
                     throw new Error('No checkout ID found in URL parameters');
                 }
 
-                // Verify the subscription status with Lemon Squeezy
-                const checkout = await lemonSqueezyService.getCheckoutSession(checkoutId);
+                // Verify the subscription status with Polar
+                const checkout = await polarService.getCheckoutSession(checkoutId);
 
                 if (checkout.data.attributes.status !== 'paid') {
                     throw new Error('Checkout session not paid yet.');

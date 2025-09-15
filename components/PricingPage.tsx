@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import PricingCard from './PricingCard';
 import { subscriptionService, PlanLimits } from '../services/subscriptionService';
-import { lemonSqueezyService } from '../services/lemonSqueezyService';
-import { supabase } from '../services/dbService';
+import { polarService } from '../services/polarService';
+import { useQuery } from 'convex/react';
+import { api } from '../convex/_generated/api';
 import { USER_MESSAGES } from '../constants/userMessages';
 
 const PricingPage: React.FC = () => {
@@ -10,6 +11,7 @@ const PricingPage: React.FC = () => {
   const [currentPlan, setCurrentPlan] = useState('trial');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const user = useQuery(api.users.getCurrentUser);
 
   useEffect(() => {
     const fetchPlans = async () => {
@@ -30,19 +32,18 @@ const PricingPage: React.FC = () => {
     setError(null);
 
     try {
-        const user = await supabase.auth.getUser();
-        if (!user.data.user) {
+        if (!user) {
             throw new Error(USER_MESSAGES.AUTH.SIGN_IN_TO_SAVE);
         }
 
-        const variantId = import.meta.env.VITE_LEMONSQUEEZY_VARIANT_ID;
+        const variantId = process.env.VITE_POLAR_VARIANT_ID;
         if (!variantId) {
-            throw new Error('Lemon Squeezy variant ID not set.');
+            throw new Error('Polar variant ID not set.');
         }
 
         const successUrl = window.location.origin + '/success';
 
-        const checkoutUrl = await lemonSqueezyService.createCheckoutUrl(variantId, user.data.user.email!, successUrl);
+        const checkoutUrl = await polarService.createCheckoutUrl(variantId, user.email!, successUrl);
 
         window.location.href = checkoutUrl;
 

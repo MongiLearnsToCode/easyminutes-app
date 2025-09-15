@@ -92,9 +92,9 @@ export const getPlanLimits = query({
 
 export const upsertSubscription = mutation({
     args: {
-        lemonsqueezy_customer_id: v.optional(v.string()),
-        lemonsqueezy_subscription_id: v.optional(v.string()),
-        lemonsqueezy_order_id: v.optional(v.string()),
+        polar_customer_id: v.optional(v.string()),
+        polar_subscription_id: v.optional(v.string()),
+        polar_order_id: v.optional(v.string()),
         plan_type: v.optional(v.string()),
         status: v.optional(v.string()),
         current_period_start: v.optional(v.number()),
