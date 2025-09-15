@@ -1,6 +1,5 @@
+
 import React, { useState } from 'react';
-import { signIn, signOut } from 'next-auth/react';
-import type { Session } from 'next-auth';
 import { useTheme } from '../contexts/ThemeContext';
 import UserAvatar from './UserAvatar';
 import { LogoIcon, SpinnerIcon, CheckCircleIcon } from '../constants';
@@ -8,9 +7,9 @@ import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 
 interface HeaderProps {
-    currentView: 'dashboard' | 'allMeetings' | 'pricing' | 'profile' | 'settings';
+    currentView: 'dashboard' | 'allMeetings' | 'pricing' | 'profile' | 'settings' | 'success';
     onNavigate: (view: 'dashboard' | 'allMeetings' | 'pricing' | 'profile' | 'settings') => void;
-    session: Session | null;
+    session: any;
     savingStatus?: {
         isAutoSaving: boolean;
         hasUnsavedChanges: boolean;
@@ -85,18 +84,18 @@ const Header: React.FC<HeaderProps> = ({ currentView, onNavigate, session, savin
                         </nav>
                         
                         {/* User Avatar */}
-                        {session && (
+                        {session ? (
                             <UserAvatar 
                                 size="md"
                                 onProfileClick={() => onNavigate('profile')}
                                 onSettingsClick={() => onNavigate('settings')}
+                                session={session}
                             />
-                        )}
-                        {!session && (
+                        ) : (
                             <Button 
                                 variant="default"
                                 size="sm"
-                                onClick={() => signIn('google')}
+                                onClick={onSignUpClick}
                             >
                                 Sign In
                             </Button>
@@ -161,18 +160,6 @@ const Header: React.FC<HeaderProps> = ({ currentView, onNavigate, session, savin
                                         </Button>
                                     </nav>
                                     
-                                    {session && (
-                                        <div className="p-4 border-t border-border">
-                                            <Button
-                                                variant="outline"
-                                                size="lg"
-                                                onClick={() => signOut()}
-                                                className="w-full"
-                                            >
-                                                Logout
-                                            </Button>
-                                        </div>
-                                    )}
                                 </div>
                             </SheetContent>
                         </Sheet>

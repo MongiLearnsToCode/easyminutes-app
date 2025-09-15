@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import type { Session } from '@supabase/supabase-js';
 import Header from './components/Header';
 import Dashboard from './components/Dashboard';
 import AllMeetingsPage from './components/AllMeetingsPage';
@@ -8,13 +7,12 @@ import PricingPage from './components/PricingPage';
 import ProfilePage from './components/ProfilePage';
 import { ToastProvider } from '@/components/ui/toast';
 import { ThemeProvider } from './contexts/ThemeContext';
-import { authService } from './services/AuthService';
 import SignUpModal from './components/SignUpModal';
-
-import { profileService } from './services/profileService';
+import { useQuery } from 'convex/react';
+import { api } from './convex/_generated/api';
 
 const App: React.FC = () => {
-    const [session, setSession] = useState<Session | null>(null);
+    const session = useQuery(api.users.getCurrentUser);
     const [view, setView] = useState<'dashboard' | 'allMeetings' | 'pricing' | 'success' | 'profile' | 'settings'>('dashboard');
     const [selectedMeetingId, setSelectedMeetingId] = useState<string | null>(null);
     const [loading, setLoading] = useState(true);
@@ -28,25 +26,10 @@ const App: React.FC = () => {
     } | undefined>(undefined);
 
     useEffect(() => {
-        const subscription = authService.onAuthStateChange((session) => {
-            setSession(session);
-            if (session) {
-                profileService.getProfile().then(profile => {
-                    // Onboarding removed
-                    setLoading(false);
-                }).catch(error => {
-                    console.error("Error fetching profile: ", error);
-                    setLoading(false);
-                });
-            } else {
-                setLoading(false);
-            }
-        });
-
-        return () => {
-            subscription?.unsubscribe();
-        };
-    }, []);
+        if (session !== undefined) {
+            setLoading(false);
+        }
+    }, [session]);
 
     const handleNavigate = (targetView: 'dashboard' | 'allMeetings' | 'pricing' | 'success' | 'profile' | 'settings') => {
         setSelectedMeetingId(null);
@@ -100,7 +83,7 @@ const App: React.FC = () => {
             <ToastProvider>
                 <div className="min-h-screen bg-background font-sans text-foreground">
                         <Header currentView={view} onNavigate={handleNavigate} session={session} savingStatus={savingStatus} onSignUpClick={() => setIsSignUpModalOpen(true)} />
-                        {view === 'dashboard' && <Dashboard onShowAll={() => handleNavigate('allMeetings')} selectedMeetingId={selectedMeetingId} onSavingStatusChange={setSavingStatus} session={session} currentSummary={currentSummary} setCurrentSummary={setCurrentSummary} onNavigate={handleNavigate} />}
+                        {view === 'dashboard' && <Dashboard onShowAll={() => handleNavigate('allMeetings')} selectedMeetingId={selectedMeetingId} onSavingStatusChange={setSavingStatus} currentSummary={currentSummary} setCurrentSummary={setCurrentSummary} onNavigate={handleNavigate} />}
                         {view === 'allMeetings' && <AllMeetingsPage onSelectMeeting={handleSelectMeetingFromAll} onBack={() => handleNavigate('dashboard')} />}
                         {view === 'pricing' && <PricingPage />}
                         {/* {view === 'success' && <SuccessPage onNavigate={handleNavigate} />} */}

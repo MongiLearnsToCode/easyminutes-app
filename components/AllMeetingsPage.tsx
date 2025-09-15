@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { MeetingSummary } from '../types';
-import { getAllMinutes, deleteMinute } from '../services/dbService';
+import { useQuery, useMutation } from 'convex/react';
+import { api } from '../convex/_generated/api';
 import { SearchIcon, TrashIcon, ArrowLeftIcon, HistoryIcon, FileTextIcon, ViewGridIcon, ViewListIcon } from '../constants';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -53,32 +54,15 @@ const AllMeetingsPage: React.FC<{
     onSelectMeeting: (id: string) => void;
     onBack: () => void;
 }> = ({ onSelectMeeting, onBack }) => {
-    const [meetings, setMeetings] = useState<MeetingSummary[]>([]);
+    const meetings = useQuery(api.minutes.getAllMinutes) || [];
+    const deleteMinute = useMutation(api.minutes.deleteMinute);
     const [searchTerm, setSearchTerm] = useState('');
     const [error, setError] = useState<string | null>(null);
     const [layout, setLayout] = useState<Layout>('list');
     const [sortOption, setSortOption] = useState<SortOption>('date-desc');
-    const [loading, setLoading] = useState(true);
+    const [loading, setLoading] = useState(false);
     const [deleteConfirmation, setDeleteConfirmation] = useState<{ isOpen: boolean; meetingId: string | null; meetingTitle: string }>({ isOpen: false, meetingId: null, meetingTitle: '' });
     const [isDeleting, setIsDeleting] = useState(false);
-
-    const loadMeetings = useCallback(async () => {
-        try {
-            setLoading(true);
-            setError(null);
-            const allMeetings = await getAllMinutes();
-            setMeetings(allMeetings);
-        } catch (e) {
-            console.error("Failed to load meetings", e);
-            setError(e instanceof Error ? e.message : "Could not load meeting history.");
-        } finally {
-            setLoading(false);
-        }
-    }, []);
-
-    useEffect(() => {
-        loadMeetings();
-    }, [loadMeetings]);
 
     const handleDeleteClick = (id: string, title: string) => {
         setDeleteConfirmation({ isOpen: true, meetingId: id, meetingTitle: title });
@@ -89,8 +73,7 @@ const AllMeetingsPage: React.FC<{
         
         setIsDeleting(true);
         try {
-            await deleteMinute(deleteConfirmation.meetingId);
-            await loadMeetings(); // Refresh the list
+            await deleteMinute({ id: deleteConfirmation.meetingId });
             setDeleteConfirmation({ isOpen: false, meetingId: null, meetingTitle: '' });
         } catch (e) {
             setError(e instanceof Error ? e.message : "Failed to delete the meeting summary.");

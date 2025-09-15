@@ -28,7 +28,7 @@ import { USER_MESSAGES } from '../constants/userMessages';
 import { useFreeGenGate, gateAndGenerate } from '../lib/useFreeGenGate';
 import BlockingProModal from './BlockingProModal';
 // import BlockingProModal from './BlockingProModal';
-import subscriptionService from '../services/subscriptionService';
+import { useGetSubscription } from '../services/subscriptionService';
 
 type ActiveTab = 'text' | 'voice' | 'upload';
 
@@ -625,6 +625,8 @@ const Dashboard: React.FC<{ onShowAll: () => void; selectedMeetingId: string | n
         setOriginalSummaryForDiff(minute);
     }, []);
 
+    const subscription = useGetSubscription();
+
     // Auto-save edits with debounce
     useEffect(() => {
         if (!hasUnsavedChanges) {
@@ -634,8 +636,7 @@ const Dashboard: React.FC<{ onShowAll: () => void; selectedMeetingId: string | n
         const handler = setTimeout(async () => {
             if (!currentSummary) return;
             
-            const canAutoSave = await subscriptionService.canPerformAction('has_autosave');
-            if (!canAutoSave) {
+            if (subscription?.plan_type !== 'pro') {
                 toast.info('Auto-save is a Pro feature', 'Subscribe to automatically save your changes.');
                 return;
             }
@@ -656,7 +657,7 @@ const Dashboard: React.FC<{ onShowAll: () => void; selectedMeetingId: string | n
         return () => {
             clearTimeout(handler);
         };
-    }, [currentSummary, hasUnsavedChanges, toast]);
+    }, [currentSummary, hasUnsavedChanges, toast, subscription]);
     
     // Pass saving status to parent
     useEffect(() => {

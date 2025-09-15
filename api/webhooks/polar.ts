@@ -1,39 +1,23 @@
 
-import { NextApiRequest, NextApiResponse } from 'next';
-import { Polar } from '@polar-sh/sdk';
+import { Webhooks } from '@polar-sh/nextjs';
 
-const polar = new Polar();
+export const POST = Webhooks({
+    webhookSecret: process.env.POLAR_WEBHOOK_SECRET!,
+    onPayload: async (payload) => {
+        console.log('Received Polar webhook payload:', payload);
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-    if (req.method !== 'POST') {
-        res.setHeader('Allow', 'POST');
-        res.status(405).end('Method Not Allowed');
-        return;
-    }
-
-    try {
-        const event = await polar.webhooks.constructEvent(
-            req.body,
-            req.headers['polar-signature'] as string,
-            process.env.POLAR_WEBHOOK_SECRET as string
-
-        switch (event.type) {
+        switch (payload.type) {
             case 'subscription.created':
-                // Handle subscription created event
+                console.log('New subscription created:', payload.data);
+                // Update your database, send a welcome email, etc.
                 break;
-            case 'subscription.updated':
-                // Handle subscription updated event
+            case 'order.paid':
+                console.log('Order paid:', payload.data);
+                // Fulfill the order, grant access, etc.
                 break;
-            case 'subscription.deleted':
-                // Handle subscription deleted event
-                break;
+            // Add more cases for other event types you've subscribed to
             default:
-                console.log(`Unhandled event type ${event.type}`);
+                console.log(`Unhandled event type: ${payload.type}`);
         }
-
-        res.status(200).json({ received: true });
-    } catch (err) {
-        console.error(err);
-        res.status(400).send(`Webhook Error: ${(err as Error).message}`);
-    }
-}
+    },
+});

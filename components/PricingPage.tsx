@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import PricingCard from './PricingCard';
-import { subscriptionService, PlanLimits } from '../services/subscriptionService';
+import { useGetPlanLimits, PlanLimits } from '../services/subscriptionService';
 import { polarService } from '../services/polarService';
 import { useQuery } from 'convex/react';
 import { api } from '../convex/_generated/api';
@@ -13,14 +13,14 @@ const PricingPage: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const user = useQuery(api.users.getCurrentUser);
 
+  const proPlan = useGetPlanLimits('pro');
+  const trialPlan = useGetPlanLimits('trial');
+
   useEffect(() => {
-    const fetchPlans = async () => {
-      const proPlan = subscriptionService.getPlanLimits('pro');
-      const trialPlan = subscriptionService.getPlanLimits('trial');
+    if (proPlan && trialPlan) {
       setPlans({ pro: proPlan, trial: trialPlan });
-    };
-    fetchPlans();
-  }, []);
+    }
+  }, [proPlan, trialPlan]);
 
   const handleSelectPlan = async (plan: string) => {
     if (plan === 'trial') {
