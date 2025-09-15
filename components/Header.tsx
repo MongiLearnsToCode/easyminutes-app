@@ -1,17 +1,15 @@
 import React, { useState } from 'react';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuGroup, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { Switch } from '@/components/ui/switch';
-import UserAvatar from './UserAvatar';
+import { signIn, signOut } from 'next-auth/react';
+import type { Session } from 'next-auth';
 import { useTheme } from '../contexts/ThemeContext';
-import type { Session } from '@supabase/supabase-js';
-import { supabase } from '../services/dbService';
+import UserAvatar from './UserAvatar';
 import { LogoIcon, SpinnerIcon, CheckCircleIcon } from '../constants';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 
 interface HeaderProps {
-    currentView: 'dashboard' | 'allMeetings' | 'pricing' | 'success' | 'profile' | 'settings';
-    onNavigate: (view: 'dashboard' | 'allMeetings' | 'pricing' | 'success' | 'profile' | 'settings') => void;
+    currentView: 'dashboard' | 'allMeetings' | 'pricing' | 'profile' | 'settings';
+    onNavigate: (view: 'dashboard' | 'allMeetings' | 'pricing' | 'profile' | 'settings') => void;
     session: Session | null;
     savingStatus?: {
         isAutoSaving: boolean;
@@ -25,10 +23,6 @@ const Header: React.FC<HeaderProps> = ({ currentView, onNavigate, session, savin
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const { theme, setTheme, actualTheme } = useTheme();
 
-    const handleLogout = async () => {
-        await supabase.auth.signOut();
-    };
-    
     const handleNavigation = (view: 'dashboard' | 'allMeetings' | 'pricing') => {
         onNavigate(view);
         setIsMenuOpen(false);
@@ -102,9 +96,9 @@ const Header: React.FC<HeaderProps> = ({ currentView, onNavigate, session, savin
                             <Button 
                                 variant="default"
                                 size="sm"
-                                onClick={onSignUpClick}
+                                onClick={() => signIn('google')}
                             >
-                                Sign Up
+                                Sign In
                             </Button>
                         )}
                         {/* Mobile/Tablet Hamburger Menu */}
@@ -172,7 +166,7 @@ const Header: React.FC<HeaderProps> = ({ currentView, onNavigate, session, savin
                                             <Button
                                                 variant="outline"
                                                 size="lg"
-                                                onClick={handleLogout}
+                                                onClick={() => signOut()}
                                                 className="w-full"
                                             >
                                                 Logout

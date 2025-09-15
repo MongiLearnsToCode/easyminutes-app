@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import type { Session } from '@supabase/supabase-js';
+import { useSession, signIn, signOut } from 'next-auth/react';
 import Header from '../components/Header';
 import Dashboard from '../components/Dashboard';
 import AllMeetingsPage from '../components/AllMeetingsPage';
@@ -9,16 +9,11 @@ import PricingPage from '../components/PricingPage';
 import ProfilePage from '../components/ProfilePage';
 import { ToastProvider } from '../components/ui/toast';
 import { ThemeProvider } from '../contexts/ThemeContext';
-import { authService } from '../services/AuthService';
-import SignUpModal from '../components/SignUpModal';
-import { profileService } from '../services/profileService';
 
-export default function AppClient({ session: initialSession }: { session: Session | null }) {
-    const [session, setSession] = useState<Session | null>(initialSession);
-    const [view, setView] = useState<'dashboard' | 'allMeetings' | 'pricing' | 'success' | 'profile' | 'settings'>('dashboard');
+export default function AppClient() {
+    const { data: session, status } = useSession();
+    const [view, setView] = useState<'dashboard' | 'allMeetings' | 'pricing' | 'profile' | 'settings'>('dashboard');
     const [selectedMeetingId, setSelectedMeetingId] = useState<string | null>(null);
-    const [loading, setLoading] = useState(true);
-    const [isSignUpModalOpen, setIsSignUpModalOpen] = useState(false);
     const [currentSummary, setCurrentSummary] = useState<any | null>(null);
     const [savingStatus, setSavingStatus] = useState<{
         isAutoSaving: boolean;
@@ -26,27 +21,7 @@ export default function AppClient({ session: initialSession }: { session: Sessio
         currentSummary: any;
     } | undefined>(undefined);
 
-    useEffect(() => {
-        const subscription = authService.onAuthStateChange((session) => {
-            setSession(session);
-            if (session) {
-                profileService.getProfile().then(profile => {
-                    setLoading(false);
-                }).catch(error => {
-                    console.error("Error fetching profile: ", error);
-                    setLoading(false);
-                });
-            } else {
-                setLoading(false);
-            }
-        });
-
-        return () => {
-            subscription?.unsubscribe();
-        };
-    }, []);
-
-    const handleNavigate = (targetView: 'dashboard' | 'allMeetings' | 'pricing' | 'success' | 'profile' | 'settings') => {
+    const handleNavigate = (targetView: 'dashboard' | 'allMeetings' | 'pricing' | 'profile' | 'settings') => {
         setSelectedMeetingId(null);
         setView(targetView);
     };
@@ -72,28 +47,44 @@ export default function AppClient({ session: initialSession }: { session: Sessio
         };
     }, [currentSummary, session]);
 
-    if (loading) {
+    const handleSelectMeetingFromAll = (id: string) => {
+        setSelectedMeetingId(id);
+        setView('dashboard');
+    };
+
+    if (status === 'loading') {
         return <div className="min-h-screen bg-background" />;
+    }
+
+    if (status === 'unauthenticated') {
+        return (
+            <ThemeProvider>
+                <div className="min-h-screen bg-background font-sans text-foreground">
+                    <Header currentView={view} onNavigate={handleNavigate} session={null} savingStatus={savingStatus} onSignUpClick={() => signIn('google')} />
+                    <div className="flex flex-col items-center justify-center h-screen">
+                        <h1 className="text-4xl font-bold mb-4">Welcome to Easy Minutes</h1>
+                        <p className="text-lg mb-8">Please sign in to continue</p>
+                        <button onClick={() => signIn('google')} className="bg-primary text-primary-foreground px-6 py-3 rounded-lg">
+                            Sign in with Google
+                        </button>
+                    </div>
+                </div>
+            </ThemeProvider>
+        );
     }
 
     return (
         <ThemeProvider>
             <ToastProvider>
                 <div className="min-h-screen bg-background font-sans text-foreground">
-                    <Header currentView={view} onNavigate={handleNavigate} session={session} savingStatus={savingStatus} onSignUpClick={() => setIsSignUpModalOpen(true)} />
+                    <Header currentView={view} onNavigate={handleNavigate} session={session} savingStatus={savingStatus} onSignUpClick={() => {}} />
                     {view === 'dashboard' && <Dashboard onShowAll={() => handleNavigate('allMeetings')} selectedMeetingId={selectedMeetingId} onSavingStatusChange={setSavingStatus} session={session} currentSummary={currentSummary} setCurrentSummary={setCurrentSummary} onNavigate={handleNavigate} />}
                     {view === 'allMeetings' && <AllMeetingsPage onSelectMeeting={handleSelectMeetingFromAll} onBack={() => handleNavigate('dashboard')} />}
                     {view === 'pricing' && <PricingPage />}
                     {view === 'profile' && <ProfilePage onBack={() => handleNavigate('dashboard')} />}
                     {view === 'settings' && <ProfilePage onBack={() => handleNavigate('dashboard')} />}
-                    <SignUpModal isOpen={isSignUpModalOpen} onClose={() => setIsSignUpModalOpen(false)} />
                 </div>
             </ToastProvider>
         </ThemeProvider>
     );
 }
-
-    const handleSelectMeetingFromAll = (id: string) => {
-        setSelectedMeetingId(id);
-        setView('dashboard');
-    };
