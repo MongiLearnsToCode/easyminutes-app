@@ -36,14 +36,11 @@ const PricingPage: React.FC = () => {
             throw new Error(USER_MESSAGES.AUTH.SIGN_IN_TO_SAVE);
         }
 
-        const variantId = process.env.VITE_POLAR_VARIANT_ID;
-        if (!variantId) {
-            throw new Error('Polar variant ID not set.');
-        }
+        
 
-        const successUrl = window.location.origin + '/success';
+        const successUrl = process.env.POLAR_SUCCESS_URL!;
 
-        const checkoutUrl = await polarService.createCheckoutUrl(variantId, user.email!, successUrl);
+        const checkoutUrl = await polarService.createCheckoutUrl(process.env.NEXT_PUBLIC_STARTER_SLUG!, user.email!, successUrl);
 
         window.location.href = checkoutUrl;
 

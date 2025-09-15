@@ -16,7 +16,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             req.body,
             req.headers['polar-signature'] as string,
             process.env.POLAR_WEBHOOK_SECRET as string
-        );
 
         switch (event.type) {
             case 'subscription.created':
