@@ -40,7 +40,7 @@ const PricingPage: React.FC = () => {
 
         const successUrl = process.env.POLAR_SUCCESS_URL!;
 
-        const checkoutUrl = await polarService.createCheckoutUrl(process.env.NEXT_PUBLIC_STARTER_SLUG!, user.email!, successUrl);
+        const checkoutUrl = await polarService.createCheckoutUrl(process.env.NEXT_PUBLIC_STARTER_TIER!, user.email!, successUrl);
 
         window.location.href = checkoutUrl;
 
