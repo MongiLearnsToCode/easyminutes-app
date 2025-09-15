@@ -1,7 +1,8 @@
 import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import { MeetingSummary, ActionItem, SpeechRecognition, SpeechRecognitionEvent, SpeechRecognitionErrorEvent, SummarizeAudioInput } from '../types';
 import { summarizeMinutes } from '../services/geminiService';
-import { initDB, getAllMinutes, addMinute, updateMinute, deleteMinute } from '../services/dbService';
+import { useQuery, useMutation } from 'convex/react';
+import { api } from '../convex/_generated/api';
 import { MicIcon, TextIcon, SpinnerIcon, CheckCircleIcon, TrashIcon, PlusIcon, UploadIcon, FileTextIcon, FileAudioIcon, HistoryIcon, SearchIcon, ArrowUpTrayIcon, DocumentDuplicateIcon, MailIcon } from '../constants';
 import { Packer, Document, Paragraph, TextRun, HeadingLevel, AlignmentType, Table, TableRow, TableCell, WidthType, BorderStyle } from 'docx';
 import saveAs from 'file-saver';
@@ -196,7 +197,7 @@ className="ml-2 text-xs font-bold text-foreground bg-primary/10 px-2 py-1 rounde
     );
 };
 
-const Dashboard: React.FC<{ onShowAll: () => void; selectedMeetingId: string | null; onSavingStatusChange: (status: { isAutoSaving: boolean; hasUnsavedChanges: boolean; currentSummary: any; } | undefined) => void; session: Session | null; currentSummary: any | null; setCurrentSummary: (summary: any | null) => void; onNavigate: (view: 'dashboard' | 'allMeetings' | 'pricing' | 'success' | 'profile' | 'settings') => void; }> = ({ onShowAll, selectedMeetingId, onSavingStatusChange, session, currentSummary, setCurrentSummary, onNavigate }) => {
+const Dashboard: React.FC<{ onShowAll: () => void; selectedMeetingId: string | null; onSavingStatusChange: (status: { isAutoSaving: boolean; hasUnsavedChanges: boolean; currentSummary: any; } | undefined) => void; currentSummary: any | null; setCurrentSummary: (summary: any | null) => void; onNavigate: (view: 'dashboard' | 'allMeetings' | 'pricing' | 'success' | 'profile' | 'settings') => void; }> = ({ onShowAll, selectedMeetingId, onSavingStatusChange, currentSummary, setCurrentSummary, onNavigate }) => {
     const toast = useToast();
     const [activeTab, setActiveTab] = useState<ActiveTab>('text');
     const [inputText, setInputText] = useState('');
@@ -206,7 +207,11 @@ const Dashboard: React.FC<{ onShowAll: () => void; selectedMeetingId: string | n
     const [deleteConfirmation, setDeleteConfirmation] = useState<{ isOpen: boolean; meetingId: string | null; meetingTitle: string }>({ isOpen: false, meetingId: null, meetingTitle: '' });
     const [isDeleting, setIsDeleting] = useState(false);
 
-    const [savedMinutes, setSavedMinutes] = useState<MeetingSummary[]>([]);
+    const savedMinutes = useQuery(api.minutes.getAllMinutes) || [];
+    const addMinute = useMutation(api.minutes.addMinute);
+    const updateMinute = useMutation(api.minutes.updateMinute);
+    const deleteMinute = useMutation(api.minutes.deleteMinute);
+
     const [searchTerm, setSearchTerm] = useState('');
 
     const [isLoading, setIsLoading] = useState(false);
@@ -237,28 +242,6 @@ const Dashboard: React.FC<{ onShowAll: () => void; selectedMeetingId: string | n
     //     checkTrialStatus();
     // }, [session]);
 
-
-    const loadMinutesFromDB = useCallback(async () => {
-        try {
-            setError(null);
-            const minutes = await getAllMinutes();
-            setSavedMinutes(minutes);
-        } catch (e) {
-// Don't show authentication errors to unauthenticated users
-            if (e instanceof Error && e.message.includes(USER_MESSAGES.AUTH.NOT_AUTHENTICATED)) {
-                console.log('User not authenticated - continuing without saved minutes');
-                setSavedMinutes([]);
-            } else {
-                setError(e instanceof Error ? e.message : "Could not load saved minutes.");
-                console.error(e);
-            }
-        }
-    }, []);
-
-useEffect(() => {
-        // Direct access without login, load initial meeting data
-        loadMinutesFromDB();
-    }, [loadMinutesFromDB]);
 
     useEffect(() => {
         if (textareaRef.current) {
@@ -615,7 +598,6 @@ useEffect(() => {
                     const savedSummary = await addMinute(result);
                     setCurrentSummary(savedSummary);
                     setOriginalSummaryForDiff(savedSummary);
-                    await loadMinutesFromDB();
                     toast.success('Meeting minutes generated and saved!', 'Your AI-powered meeting summary is ready for review and has been saved.');
                 } catch (saveError) {
                     // If save fails (user not authenticated), keep the local version
@@ -636,7 +618,7 @@ useEffect(() => {
                 setIsLoading(false);
             }
         });
-    }, [inputText, loadMinutesFromDB, savedMinutes, requirePro, openProModal, increment, remaining, canGenerate]);
+    }, [inputText, savedMinutes, requirePro, openProModal, increment, remaining, canGenerate]);
     
     const handleSelectMinute = useCallback((minute: MeetingSummary) => {
         setCurrentSummary(minute);
@@ -663,7 +645,6 @@ useEffect(() => {
                 // Update timestamp on each save to reflect last modification time
                 const summaryToUpdate = await updateMinute(currentSummary);
                 setOriginalSummaryForDiff(summaryToUpdate); // Update baseline after save
-                await loadMinutesFromDB(); // Refresh list to reflect new timestamp
             } catch (e) {
                 console.error("Auto-save failed:", e);
                 setError("Failed to save changes automatically.");
@@ -675,7 +656,7 @@ useEffect(() => {
         return () => {
             clearTimeout(handler);
         };
-    }, [currentSummary, hasUnsavedChanges, loadMinutesFromDB, toast]);
+    }, [currentSummary, hasUnsavedChanges, toast]);
     
     // Pass saving status to parent
     useEffect(() => {
@@ -706,8 +687,7 @@ useEffect(() => {
         
         setIsDeleting(true);
         try {
-            await deleteMinute(deleteConfirmation.meetingId);
-            await loadMinutesFromDB();
+            await deleteMinute({ id: deleteConfirmation.meetingId });
             if (currentSummary?.id === deleteConfirmation.meetingId) {
                 setCurrentSummary(null);
                 setOriginalSummaryForDiff(null);
@@ -722,7 +702,7 @@ useEffect(() => {
         } finally {
             setIsDeleting(false);
         }
-    }, [deleteConfirmation.meetingId, deleteConfirmation.meetingTitle, currentSummary, loadMinutesFromDB, toast]);
+    }, [deleteConfirmation.meetingId, deleteConfirmation.meetingTitle, currentSummary, toast]);
 
     const handleDeleteCancel = useCallback(() => {
         setDeleteConfirmation({ isOpen: false, meetingId: null, meetingTitle: '' });
@@ -751,7 +731,7 @@ useEffect(() => {
     }, [filteredMinutes]);
 
     const tabClasses = (tabName: ActiveTab) =>
-        `flex items-center space-x-2 px-4 py-2 rounded-lg font-medium transition-colors duration-200 cursor-pointer w-1/3 justify-center ${
+        `flex items-center space-x-2 px-4 py-2 rounded-lg font-medium transition-colors duration-200 cursor-pointer w-1/3 justify-center ${ 
             activeTab === tabName
                 ? 'bg-brand-primary text-white shadow-md'
                 : 'text-brand-muted hover:bg-gray-200'
@@ -817,7 +797,7 @@ useEffect(() => {
                                     onDragOver={handleDragOver} 
                                     onDragLeave={handleDragLeave} 
                                     onDrop={handleDrop} 
-                                    className={`relative flex flex-col items-center justify-center w-full min-h-[300px] border-2 border-dashed rounded-lg cursor-pointer transition-colors duration-200 ${
+                                    className={`relative flex flex-col items-center justify-center w-full min-h-[300px] border-2 border-dashed rounded-lg cursor-pointer transition-colors duration-200 ${ 
                                         isDragging ? 'border-primary bg-primary/10' : 'border-border bg-muted hover:bg-muted/80'
                                     }`}
                                 >
@@ -873,7 +853,6 @@ useEffect(() => {
                                 variant="outline"
                                 size="lg"
                                 className="w-full"
-                                disabled={!session}
                             >
                                 Save
                             </Button>
@@ -1001,7 +980,6 @@ className="flex items-center space-x-1 px-3 py-2 text-sm font-medium text-foregr
                                     onClick={() => toast.info('Sign up to share your minutes.')}
                                     className="flex items-center space-x-1 px-3 py-2 text-sm font-medium text-foreground bg-muted hover:bg-muted/80 rounded-lg transition-colors"
                                     title="Share via Email (Pro)"
-                                    disabled={!session}
                                 >
                                     <MailIcon className="w-4 h-4" />
                                     <span className="hidden sm:inline">Email (Pro)</span>
@@ -1010,18 +988,17 @@ className="flex items-center space-x-1 px-3 py-2 text-sm font-medium text-foregr
                                         <button
 className="flex items-center space-x-1 px-3 py-2 text-sm font-medium text-foreground bg-muted hover:bg-muted/80 rounded-lg transition-colors"
                                             title="Export Options"
-                                            disabled={!session}
                                         >
                                             <ArrowUpTrayIcon className="w-4 h-4" />
                                             <span className="hidden sm:inline">Export</span>
                                         </button>
                                     </DropdownMenuTrigger>
                                     <DropdownMenuContent align="end" className="w-48">
-                                         <DropdownMenuItem onSelect={() => toast.info('Subscribe to Pro to export as .docx')} disabled={!session}>
+                                         <DropdownMenuItem onSelect={() => toast.info('Subscribe to Pro to export as .docx')}>
                                             <FileTextIcon className="w-4 h-4 text-blue-600 mr-2" />
                                             Export as .docx (Pro)
                                         </DropdownMenuItem>
-                                        <DropdownMenuItem onSelect={() => toast.info('Subscribe to Pro to export as .pdf')} disabled={!session}>
+                                        <DropdownMenuItem onSelect={() => toast.info('Subscribe to Pro to export as .pdf')}>
                                             <FileTextIcon className="w-4 h-4 text-red-600 mr-2" />
                                             Export as .pdf (Pro)
                                         </DropdownMenuItem>                                    </DropdownMenuContent>

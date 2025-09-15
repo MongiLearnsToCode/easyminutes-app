@@ -3,7 +3,8 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { authService } from '../services/AuthService';
+import { useMutation } from 'convex/react';
+import { api } from '../convex/_generated/api';
 import { useToast } from '@/components/ui/toast';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
 
@@ -20,6 +21,8 @@ const SignUpModal: React.FC<SignUpModalProps> = ({ isOpen, onClose }) => {
   const [error, setError] = useState<string | null>(null);
   const [isLogin, setIsLogin] = useState(false);
   const toast = useToast();
+  const logIn = useMutation(api.auth.logIn);
+  const signUp = useMutation(api.auth.signUp);
 
   const handleAuthAction = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -27,36 +30,13 @@ const SignUpModal: React.FC<SignUpModalProps> = ({ isOpen, onClose }) => {
     setError(null);
     try {
       if (isLogin) {
-        await authService.signIn(email, password);
+        await logIn({ email, password });
         toast.success('Success', 'Logged in successfully.');
       } else {
-        const { error } = await authService.signUp(email, password, name);
-        if (error && error.message.includes('already registered')) {
-          setError('This email is already registered. Please log in instead.');
-        } else if (error) {
-          throw error;
-        } else {
-          toast.success('Success', 'Check your email for a confirmation link.');
-        }
+        await signUp({ email, password, fullName: name });
+        toast.success('Success', 'Check your email for a confirmation link.');
       }
       onClose();
-    } catch (err) {
-      setError((err as Error).message);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handlePasswordRecovery = async () => {
-    if (!email) {
-      setError('Please enter your email address to recover your password.');
-      return;
-    }
-    setLoading(true);
-    setError(null);
-    try {
-      await authService.sendPasswordResetEmail(email);
-      toast.success('Success', 'Password recovery email sent.');
     } catch (err) {
       setError((err as Error).message);
     } finally {
@@ -148,11 +128,6 @@ const SignUpModal: React.FC<SignUpModalProps> = ({ isOpen, onClose }) => {
                 {loading ? 'Logging in...' : 'Login'}
               </Button>
             </form>
-            <div className="text-center mt-4">
-              <Button variant="link" onClick={handlePasswordRecovery} className="text-sm">
-                Forgot Password?
-              </Button>
-            </div>
           </TabsContent>
         </Tabs>
         <DialogFooter>

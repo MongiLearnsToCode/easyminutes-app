@@ -1,53 +1,39 @@
-import { supabase } from './dbService';
-import { USER_MESSAGES } from '../constants/userMessages';
+
+import { convex } from './dbService';
+import { api } from '../convex/_generated/api';
 
 class AuthService {
   async signUp(email, password, fullName?) {
-    const { user, error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: { data: { full_name: fullName } }
-    });
-    if (error) {
-      throw new Error(error.message);
-    }
+    // This is a placeholder for a real authentication implementation.
+    // In a real app, you would use an authentication provider like Clerk, Auth0, or your own.
+    const user = await convex.mutation(api.auth.logIn, { email, password });
     return user;
   }
 
   async signIn(email, password) {
-    const { user, error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
-    if (error) {
-      throw new Error(error.message);
-    }
+    const user = await convex.mutation(api.auth.logIn, { email, password });
     return user;
   }
 
   async signOut() {
-    const { error } = await supabase.auth.signOut();
-    if (error) {
-      throw new Error(error.message);
-    }
+    await convex.mutation(api.auth.logOut);
   }
 
   onAuthStateChange(callback) {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-        callback(session);
-    });
-    return subscription;
+    // This is a placeholder for a real authentication implementation.
+    // In a real app, you would use an authentication provider like Clerk, Auth0, or your own.
+    return () => {};
   }
 
   async sendPasswordResetEmail(email) {
-    const { error } = await supabase.auth.resetPasswordForEmail(email);
-    if (error) {
-      throw new Error(error.message);
-    }
+    // This is a placeholder for a real authentication implementation.
+    // In a real app, you would use an authentication provider like Clerk, Auth0, or your own.
   }
 
   getCurrentUser() {
-    return supabase.auth.getUser();
+    // This is a placeholder for a real authentication implementation.
+    // In a real app, you would use an authentication provider like Clerk, Auth0, or your own.
+    return null;
   }
 }
 

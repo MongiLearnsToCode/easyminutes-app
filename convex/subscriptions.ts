@@ -2,7 +2,7 @@
 import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
 
-const PLAN_LIMITS = {
+const PLAN_LIMITS: { [key: string]: any } = {
     free: {
         meetings_limit: 1,
         can_save: false,
