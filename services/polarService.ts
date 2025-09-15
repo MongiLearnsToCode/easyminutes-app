@@ -1,7 +1,7 @@
 
 import { Polar } from '@polar-sh/sdk';
 
-const apiKey = process.env.VITE_POLAR_API_KEY;
+const apiKey = process.env.NEXT_PUBLIC_POLAR_API_KEY;
 
 const polar = new Polar({
     accessToken: apiKey,
