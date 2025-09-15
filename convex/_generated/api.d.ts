@@ -16,6 +16,7 @@ import type {
 import type * as auth from "../auth.js";
 import type * as minutes from "../minutes.js";
 import type * as subscriptions from "../subscriptions.js";
+import type * as users from "../users.js";
 
 /**
  * A utility for referencing Convex functions in your app's API.
@@ -29,6 +30,7 @@ declare const fullApi: ApiFromModules<{
   auth: typeof auth;
   minutes: typeof minutes;
   subscriptions: typeof subscriptions;
+  users: typeof users;
 }>;
 export declare const api: FilterApi<
   typeof fullApi,
