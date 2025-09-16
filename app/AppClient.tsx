@@ -54,13 +54,15 @@ export default function AppClient() {
     return (
         <ThemeProvider>
             <ToastProvider>
-                <div className="min-h-screen bg-background font-sans text-foreground">
+                <div className="h-screen bg-background font-sans text-foreground flex flex-col overflow-hidden">
                     <Header currentView={view} onNavigate={handleNavigate} savingStatus={savingStatus} />
-                    {view === 'dashboard' && <Dashboard onShowAll={() => handleNavigate('allMeetings')} selectedMeetingId={selectedMeetingId} onSavingStatusChange={setSavingStatus} currentSummary={currentSummary} setCurrentSummary={setCurrentSummary} onNavigate={handleNavigate} />}
-                    {view === 'allMeetings' && <AllMeetingsPage onSelectMeeting={handleSelectMeetingFromAll} onBack={() => handleNavigate('dashboard')} />}
-                    {view === 'pricing' && <PricingPage />}
-                    {view === 'profile' && <ProfilePage onBack={() => handleNavigate('dashboard')} />}
-                    {view === 'settings' && <ProfilePage onBack={() => handleNavigate('dashboard')} />}
+                    <div className="flex-1 overflow-hidden">
+                        {view === 'dashboard' && <Dashboard onShowAll={() => handleNavigate('allMeetings')} selectedMeetingId={selectedMeetingId} onSavingStatusChange={setSavingStatus} currentSummary={currentSummary} setCurrentSummary={setCurrentSummary} onNavigate={handleNavigate} />}
+                        {view === 'allMeetings' && <AllMeetingsPage onSelectMeeting={handleSelectMeetingFromAll} onBack={() => handleNavigate('dashboard')} />}
+                        {view === 'pricing' && <PricingPage />}
+                        {view === 'profile' && <ProfilePage onBack={() => handleNavigate('dashboard')} />}
+                        {view === 'settings' && <ProfilePage onBack={() => handleNavigate('dashboard')} />}
+                    </div>
                 </div>
             </ToastProvider>
         </ThemeProvider>

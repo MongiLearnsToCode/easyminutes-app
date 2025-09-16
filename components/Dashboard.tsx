@@ -23,6 +23,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { ConfirmationDialog } from './ConfirmationDialog';
 import { AttendeeAvatar } from './AttendeeAvatar';
+import { EmptyState } from './EmptyState';
 import { Id } from '../convex/_generated/dataModel';
 // import ProPrompt from './ProPrompt';
 import { useToast } from '@/components/ui/toast';
@@ -32,6 +33,7 @@ import BlockingProModal from './BlockingProModal';
 // import BlockingProModal from './BlockingProModal';
 import ProPrompt from './ProPrompt';
 import { useGetSubscription } from '../services/subscriptionService';
+import Waveform from './Waveform';
 
 type ActiveTab = 'text' | 'voice' | 'upload';
 
@@ -759,68 +761,69 @@ const Dashboard: React.FC<{ onShowAll: () => void; selectedMeetingId: string | n
         
 
     return (
-        <main className="container mx-auto p-1 sm:p-2 md:p-4 lg:p-8 max-w-7xl">
+        <main className="h-full w-full max-w-[1600px] mx-auto px-4 sm:px-6 md:px-8 lg:px-12 py-6 overflow-hidden">
 
-            <div className="grid grid-cols-1 lg:grid-cols-5 gap-3 sm:gap-4 md:gap-6 lg:gap-8 lg:items-start">
+            <div className="h-full grid grid-cols-1 lg:grid-cols-5 gap-4 lg:gap-6 xl:gap-8">
                 {/* Left Column - Meeting Notes */}
-                <div className="lg:col-span-2 bg-card p-3 sm:p-4 md:p-6 rounded-xl sm:rounded-2xl shadow-sm flex flex-col space-y-4 sm:space-y-6 order-1 lg:order-1">
-                    <div>
+                <div className="lg:col-span-2 bg-card p-4 lg:p-6 rounded-xl lg:rounded-2xl shadow-sm flex flex-col h-full order-1 lg:order-1">
+                    <div className="flex flex-col h-full">
                         <h2 className="text-2xl font-bold text-foreground mb-4">Meeting Notes</h2>
-                        <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as ActiveTab)}>
-                            <TabsList className="grid w-full grid-cols-3">
-                                <TabsTrigger value="text" className="flex items-center space-x-2">
-                                    <TextIcon className="w-4 h-4" />
-                                    <span>Text</span>
-                                </TabsTrigger>
-                                <TabsTrigger value="voice" className="flex items-center space-x-2">
-                                    <MicIcon className="w-4 h-4" />
-                                    <span>Voice</span>
-                                </TabsTrigger>
-                                <TabsTrigger value="upload" className="flex items-center space-x-2">
-                                    <UploadIcon className="w-4 h-4" />
-                                    <span>Upload</span>
-                                </TabsTrigger>
-                            </TabsList>
+                        <div className="flex-1 flex flex-col min-h-0">
+                            <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as ActiveTab)} className="flex-shrink-0">
+                                <TabsList className="grid w-full grid-cols-3">
+                                    <TabsTrigger value="text" className="flex items-center space-x-2">
+                                        <TextIcon className="w-4 h-4" />
+                                        <span>Text</span>
+                                    </TabsTrigger>
+                                    <TabsTrigger value="voice" className="flex items-center space-x-2">
+                                        <MicIcon className="w-4 h-4" />
+                                        <span>Voice</span>
+                                    </TabsTrigger>
+                                    <TabsTrigger value="upload" className="flex items-center space-x-2">
+                                        <UploadIcon className="w-4 h-4" />
+                                        <span>Upload</span>
+                                    </TabsTrigger>
+                                </TabsList>
+
+                                <TabsContent value="text" className="flex-1 mt-4">
+                                    <Textarea
+                                        ref={textareaRef}
+                                        value={inputText}
+                                        onChange={(e) => setInputText(e.target.value)}
+                                        placeholder="Paste your meeting notes or raw text here..."
+                                        className="h-full min-h-[400px] resize-none overflow-y-auto"
+                                    />
+                                </TabsContent>
                             
-                            <TabsContent value="text">
-                                <Textarea 
-                                    ref={textareaRef} 
-                                    value={inputText} 
-                                    onChange={(e) => setInputText(e.target.value)} 
-                                    placeholder="Paste your meeting notes or raw text here..." 
-                                    className="min-h-[300px] resize-none"
-                                />
-                            </TabsContent>
-                            
-                            <TabsContent value="voice">
-                                <div className="flex flex-col min-h-[300px] space-y-4">
-                                    <Button 
-                                        onClick={toggleRecording} 
-                                        variant={isRecording ? "destructive" : "default"}
-                                        size="lg"
-                                        className="w-full"
-                                    >
-                                        <MicIcon className="w-5 h-5 mr-2" />
-                                        {isRecording ? 'Stop Recording' : 'Start Recording'}
-                                    </Button>
-                                    <div className="flex-grow p-4 border border-border rounded-lg overflow-y-auto bg-muted min-h-[250px]">
-                                        <p className="text-muted-foreground whitespace-pre-wrap">
-                                            {transcript || 'Your live transcription will appear here...'}
-                                        </p>
-                                        {isRecording && <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse mt-2"></div>}
+                                <TabsContent value="voice" className="flex-1 mt-4">
+                                    <div className="flex flex-col h-full space-y-4">
+                                        <Button
+                                            onClick={toggleRecording}
+                                            variant={isRecording ? "destructive" : "default"}
+                                            size="lg"
+                                            className="w-full flex-shrink-0"
+                                        >
+                                            <MicIcon className="w-5 h-5 mr-2" />
+                                            {isRecording ? 'Stop Recording' : 'Start Recording'}
+                                        </Button>
+                                        <div className="flex-1 p-4 border border-border rounded-lg overflow-y-auto bg-muted min-h-0">
+                                            <p className="text-muted-foreground whitespace-pre-wrap">
+                                                {transcript || 'Your live transcription will appear here...'}
+                                            </p>
+                                            {isRecording && <Waveform />}
+                                        </div>
                                     </div>
-                                </div>
-                            </TabsContent>
+                                </TabsContent>
                             
-                            <TabsContent value="upload">
-                                <div 
-                                    onDragOver={handleDragOver} 
-                                    onDragLeave={handleDragLeave} 
-                                    onDrop={handleDrop} 
-                                    className={`relative flex flex-col items-center justify-center w-full min-h-[300px] border-2 border-dashed rounded-lg cursor-pointer transition-colors duration-200 ${ 
-                                        isDragging ? 'border-primary bg-primary/10' : 'border-border bg-muted hover:bg-muted/80'
-                                    }`}
-                                >
+                                <TabsContent value="upload" className="flex-1 mt-4">
+                                    <div
+                                        onDragOver={handleDragOver}
+                                        onDragLeave={handleDragLeave}
+                                        onDrop={handleDrop}
+                                        className={`relative flex flex-col items-center justify-center w-full h-full min-h-[400px] border-2 border-dashed rounded-lg cursor-pointer transition-colors duration-200 ${
+                                            isDragging ? 'border-primary bg-primary/10' : 'border-border bg-muted hover:bg-muted/80'
+                                        }`}
+                                    >
                                     <input 
                                         ref={fileInputRef} 
                                         type="file" 
@@ -916,26 +919,27 @@ const Dashboard: React.FC<{ onShowAll: () => void; selectedMeetingId: string | n
                             </Button>
                             )}
                         </div>
+                     </div>
                     </div>
-                    
-                    <div className="flex-grow flex flex-col min-h-0">
-                        <div className="flex items-center justify-between mb-4">
-<button onClick={onShowAll} className="text-xl font-bold text-foreground flex items-center hover:text-primary transition-colors group">
-                                <HistoryIcon className="w-6 h-6 mr-2 text-primary transition-transform group-hover:scale-110"/>
-                                <h3 className="font-bold text-xl text-foreground">Recent Meetings</h3>
-                            </button>
-                        </div>
-                        <div className="relative mb-4">
-                            <Input 
-                                type="text" 
-                                placeholder="Search by title or attendee..." 
-                                value={searchTerm} 
-                                onChange={(e) => setSearchTerm(e.target.value)} 
-                                className="pl-10"
-                            />
-<SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground"/>
-                        </div>
-                        <div className="flex-grow overflow-y-auto space-y-3">
+
+                        <div className="flex-1 flex flex-col min-h-0 mt-6">
+                            <div className="flex items-center justify-between mb-4 flex-shrink-0">
+                                <button onClick={onShowAll} className="text-xl font-bold text-foreground flex items-center hover:text-primary transition-colors group">
+                                    <HistoryIcon className="w-6 h-6 mr-2 text-primary transition-transform group-hover:scale-110"/>
+                                    <h3 className="font-bold text-xl text-foreground">Recent Meetings</h3>
+                                </button>
+                            </div>
+                            <div className="relative mb-4 flex-shrink-0">
+                                <Input
+                                    type="text"
+                                    placeholder="Search by title or attendee..."
+                                    value={searchTerm}
+                                    onChange={(e) => setSearchTerm(e.target.value)}
+                                    className="pl-10"
+                                />
+                                <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground"/>
+                            </div>
+                            <div className="flex-1 overflow-y-auto space-y-3 min-h-0">
                             {recentFilteredMinutes.length > 0 ? recentFilteredMinutes.map(minute =>
                                 <div key={minute.id} onClick={() => handleSelectMinute(minute)} className={`p-4 rounded-lg cursor-pointer group transition-colors border ${currentSummary?.id === minute.id ? 'bg-primary/10 border-primary/20' : 'hover:bg-muted/60 border-transparent'}`}>
                                     <div className="flex justify-between items-start gap-3">
@@ -976,18 +980,18 @@ const Dashboard: React.FC<{ onShowAll: () => void; selectedMeetingId: string | n
                 </div>
 
                 {/* Right Column - Summary */}
-<div className="lg:col-span-3 bg-card p-3 sm:p-4 md:p-6 rounded-xl sm:rounded-2xl shadow-sm order-2 lg:order-2">
-                    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-3 sm:gap-4">
+                <div className="lg:col-span-3 bg-card p-4 lg:p-6 rounded-xl lg:rounded-2xl shadow-sm flex flex-col h-full order-2 lg:order-2">
+                    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-3 sm:gap-4 flex-shrink-0">
                       <div className="flex items-center space-x-3 flex-grow min-w-0 w-full sm:w-auto">
                           {currentSummary ? (
                             <input
                                 value={currentSummary.title}
                                 onChange={(e) => setCurrentSummary(cs => cs ? { ...cs, title: e.target.value } : null)}
-className="w-full bg-transparent text-2xl font-bold text-foreground border-none focus:ring-0 p-0 truncate"
+                                className="w-full bg-transparent text-2xl font-bold text-foreground border-none focus:ring-0 p-0 truncate"
                                 placeholder="Meeting Title"
                             />
                           ) : (
-<h2 className="text-2xl font-bold text-foreground">Summary</h2>
+                            <h2 className="text-2xl font-bold text-foreground">Summary</h2>
                           )}
                       </div>
                       {currentSummary && !isLoading && (
@@ -1030,7 +1034,7 @@ className="flex items-center space-x-1 px-3 py-2 text-sm font-medium text-foregr
                             </div>
                         )}
                     </div>
-<div className="min-h-[400px] p-4 bg-muted/30 rounded-lg">
+                    <div className="flex-1 p-4 bg-muted/30 rounded-lg overflow-y-auto min-h-0">
                         {isLoading && (
                             <div className="space-y-4">
                                 <Skeleton className="h-8 w-3/4" />
@@ -1082,19 +1086,6 @@ className="flex items-center space-x-1 px-3 py-2 text-sm font-medium text-foregr
             <ProPrompt
                 isOpen={proPrompt.open}
                 onClose={() => setProPrompt({ open: false, feature: '' })}
-                onGoToPricing={() => {
-                    setProPrompt({ open: false, feature: '' });
-                    onNavigate('pricing');
-                }}
-                featureLabel={proPrompt.feature}
-            />
-
-        </main>
-    );
-};
-
-export default Dashboard;
-> setProPrompt({ open: false, feature: '' })}
                 onGoToPricing={() => {
                     setProPrompt({ open: false, feature: '' });
                     onNavigate('pricing');

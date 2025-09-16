@@ -103,7 +103,7 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ onBack }) => {
     }
 
     return (
-        <div className="min-h-screen bg-background p-4">
+        <div className="h-full bg-background p-6 sm:p-8 md:p-12 overflow-y-auto">
             <div className="max-w-2xl mx-auto space-y-6">
                 {/* Header */}
                 <div className="flex items-center space-x-4">

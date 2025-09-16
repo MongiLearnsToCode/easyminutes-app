@@ -19,7 +19,10 @@ import {
   List,
   AlertTriangle,
   XCircle,
-  Pencil
+  Pencil,
+  Calendar,
+  ChevronLeft,
+  ChevronRight
 } from 'lucide-react';
 
 export const LogoIcon = ({ className }: { className?: string }) => (
@@ -51,6 +54,9 @@ export const SearchIcon = Search;
 export const ArrowLeftIcon = ArrowLeft;
 export const ViewGridIcon = LayoutGrid;
 export const ViewListIcon = List;
+export const ViewCalendarIcon = Calendar;
+export const ChevronLeftIcon = ChevronLeft;
+export const ChevronRightIcon = ChevronRight;
 export const ExclamationTriangleIcon = AlertTriangle;
 export const XCircleIcon = XCircle;
 export const EditIcon = Pencil;
