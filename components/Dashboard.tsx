@@ -113,9 +113,10 @@ const EditableMinutesDisplay: React.FC<{ summary: MeetingSummary; setSummary: Re
                 <Textarea
                     value={sanitizedSummary.summary}
                     onChange={(e) => updateSummary({ summary: e.target.value })}
-                    className="bg-muted/50 border-l-4 border-primary/50 focus:border-primary/50 resize-none"
+                    className="bg-muted/50 border-l-4 border-primary/50 focus:border-primary/50 resize-none overflow-y-auto"
                     placeholder="Meeting summary..."
-                    rows={4}
+                    rows={6}
+                    style={{ height: '120px', maxHeight: '120px' }}
                 />
             </div>
             
@@ -985,7 +986,7 @@ className="flex items-center space-x-1 px-3 py-2 text-sm font-medium text-foregr
                             </div>
                         )}
                     </div>
-                    <div className="flex-1 p-4 bg-muted/30 rounded-lg overflow-y-auto min-h-0">
+                    <div className="p-4 bg-muted/30 rounded-lg overflow-y-auto" style={{ height: 'calc(100vh - 200px)' }}>
                         {isLoading && (
                             <div className="space-y-4">
                                 <Skeleton className="h-8 w-3/4" />
