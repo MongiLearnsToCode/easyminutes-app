@@ -40,7 +40,7 @@ const MeetingCard: React.FC<{
                     <p className="text-xs text-muted-foreground font-medium">
                     {minute.attendees.length} Attendee{minute.attendees.length !== 1 ? 's' : ''}
                 </p>
-                <div className="flex items-center space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                <div className="flex items-center space-x-1 transition-opacity">
                     <button
                         onClick={(e) => { e.stopPropagation(); onEdit(minute.id); }}
                         className="p-2 rounded-full text-muted-foreground hover:bg-primary hover:text-primary-foreground transition-colors"
