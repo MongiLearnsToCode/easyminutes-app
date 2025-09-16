@@ -63,6 +63,8 @@ export const updateMinute = mutation({
     }
 
     await ctx.db.patch(id, rest);
+    const minute = await ctx.db.get(id);
+    return { ...minute, id, createdAt: minute!._creationTime };
   },
 });
 
