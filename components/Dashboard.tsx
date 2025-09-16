@@ -941,7 +941,7 @@ const Dashboard: React.FC<{ onShowAll: () => void; selectedMeetingId: string | n
                                             <h4 className="font-semibold text-foreground truncate">{minute.title}</h4>
                                             <p className="text-sm text-muted-foreground mt-1">{new Date(minute.createdAt).toLocaleString()}</p>
                                         </div>
-                                        <div className="flex items-center space-x-1 opacity-0 group-hover:opacity-100 transition-all duration-200">
+                                        <div className="flex items-center space-x-1 transition-all duration-200">
                                             <button
                                                 onClick={(e) => { e.stopPropagation(); handleSelectMinute(minute); }}
                                                 className="flex-shrink-0 p-2 rounded-full text-gray-400 hover:bg-primary hover:text-primary-foreground transition-colors"
