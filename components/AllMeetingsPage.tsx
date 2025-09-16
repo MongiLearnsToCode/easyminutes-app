@@ -8,6 +8,9 @@ import { Card } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
 import { ConfirmationDialog } from './ConfirmationDialog';
+import { AttendeeAvatar } from './AttendeeAvatar';
+import { MeetingCardSkeleton } from './MeetingCardSkeleton';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import DOMPurify from 'dompurify';
 import { Id } from '../convex/_generated/dataModel';
 
@@ -37,24 +40,49 @@ const MeetingCard: React.FC<{
                 <p className="text-sm text-muted-foreground line-clamp-3 leading-relaxed" dangerouslySetInnerHTML={{ __html: sanitizedSummary || 'No summary available.' }}></p>
             </div>
             <div className="border-t border-border p-3 flex justify-between items-center bg-muted rounded-b-xl">
-                    <p className="text-xs text-muted-foreground font-medium">
-                    {minute.attendees.length} Attendee{minute.attendees.length !== 1 ? 's' : ''}
-                </p>
+                    <div className="flex items-center">
+                        {minute.attendees.slice(0, 3).map((attendee, index) => (
+                            <AttendeeAvatar key={index} name={attendee} className="w-6 h-6 -ml-1 border-2 border-card" />
+                        ))}
+                        {minute.attendees.length > 3 && (
+                            <div className="w-6 h-6 rounded-full bg-muted flex items-center justify-center text-xs font-bold text-muted-foreground -ml-1 border-2 border-card">
+                                +{minute.attendees.length - 3}
+                            </div>
+                        )}
+                    </div>
                 <div className="flex items-center space-x-1 transition-opacity opacity-100">
-                    <button
-                        onClick={(e) => { e.stopPropagation(); onEdit(minute.id); }}
-                        className="p-2 rounded-full text-muted-foreground hover:bg-primary hover:text-primary-foreground transition-colors"
-                        aria-label={`Edit meeting: ${sanitizedTitle}`}
-                    >
-                        <EditIcon className="w-5 h-5" />
-                    </button>
-                    <button
-                        onClick={(e) => { e.stopPropagation(); onDelete(minute.id); }}
-                        className="p-2 rounded-full text-muted-foreground hover:bg-destructive hover:text-destructive-foreground transition-colors"
-                        aria-label={`Delete meeting: ${sanitizedTitle}`}
-                    >
-                        <TrashIcon className="w-5 h-5" />
-                    </button>
+                    <TooltipProvider>
+                        <Tooltip>
+                            <TooltipTrigger asChild>
+                                <button
+                                    onClick={(e) => { e.stopPropagation(); onEdit(minute.id); }}
+                                    className="p-2 rounded-full text-muted-foreground hover:bg-primary hover:text-primary-foreground transition-colors"
+                                    aria-label={`Edit meeting: ${sanitizedTitle}`}
+                                >
+                                    <EditIcon className="w-5 h-5" />
+                                </button>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                                <p>Edit</p>
+                            </TooltipContent>
+                        </Tooltip>
+                    </TooltipProvider>
+                    <TooltipProvider>
+                        <Tooltip>
+                            <TooltipTrigger asChild>
+                                <button
+                                    onClick={(e) => { e.stopPropagation(); onDelete(minute.id); }}
+                                    className="p-2 rounded-full text-muted-foreground hover:bg-destructive hover:text-destructive-foreground transition-colors"
+                                    aria-label={`Delete meeting: ${sanitizedTitle}`}
+                                >
+                                    <TrashIcon className="w-5 h-5" />
+                                </button>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                                <p>Delete</p>
+                            </TooltipContent>
+                        </Tooltip>
+                    </TooltipProvider>
                 </div>
             </div>
         </div>
@@ -206,26 +234,54 @@ const AllMeetingsPage: React.FC<{
                                         <div className="flex-grow min-w-0">
                                             <h3 className="font-bold text-foreground text-lg group-hover:text-primary transition-colors truncate">{minute.title}</h3>
                                             <p className="text-sm text-muted-foreground">{new Date(minute.createdAt).toLocaleString()}</p>
-                                            <p className="text-sm text-muted-foreground mt-1 truncate">
-                                                Attendees: {minute.attendees.length > 0 ? minute.attendees.join(', ') : 'No attendees listed'}
-                                            </p>
+                                            <div className="flex items-center mt-2">
+                                                {minute.attendees.slice(0, 5).map((attendee, index) => (
+                                                    <AttendeeAvatar key={index} name={attendee} className="-ml-2 border-2 border-background" />
+                                                ))}
+                                                {minute.attendees.length > 5 && (
+                                                    <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center text-xs font-bold text-muted-foreground -ml-2 border-2 border-background">
+                                                        +{minute.attendees.length - 5}
+                                                    </div>
+                                                )}
+                                                {minute.attendees.length === 0 && (
+                                                    <p className="text-sm text-muted-foreground">No attendees listed</p>
+                                                )}
+                                            </div>
                                         </div>
                                     </div>
                                     <div className="flex items-center space-x-1 transition-opacity opacity-100">
-                                        <button
-                                            onClick={(e) => { e.stopPropagation(); onSelectMeeting(minute.id); }}
-                                            className="p-2 rounded-full text-muted-foreground hover:bg-primary hover:text-primary-foreground transition-colors"
-                                            aria-label={`Edit meeting: ${minute.title}`}
-                                        >
-                                            <EditIcon className="w-5 h-5" />
-                                        </button>
-                                        <button
-                                            onClick={(e) => { e.stopPropagation(); handleDeleteClick(minute.id, minute.title); }}
-                                            className="p-2 rounded-full text-muted-foreground hover:bg-destructive hover:text-destructive-foreground transition-colors"
-                                            aria-label={`Delete meeting: ${minute.title}`}
-                                        >
-                                            <TrashIcon className="w-5 h-5" />
-                                        </button>
+                                        <TooltipProvider>
+                                            <Tooltip>
+                                                <TooltipTrigger asChild>
+                                                    <button
+                                                        onClick={(e) => { e.stopPropagation(); onSelectMeeting(minute.id); }}
+                                                        className="p-2 rounded-full text-muted-foreground hover:bg-primary hover:text-primary-foreground transition-colors"
+                                                        aria-label={`Edit meeting: ${minute.title}`}
+                                                    >
+                                                        <EditIcon className="w-5 h-5" />
+                                                    </button>
+                                                </TooltipTrigger>
+                                                <TooltipContent>
+                                                    <p>Edit</p>
+                                                </TooltipContent>
+                                            </Tooltip>
+                                        </TooltipProvider>
+                                        <TooltipProvider>
+                                            <Tooltip>
+                                                <TooltipTrigger asChild>
+                                                    <button
+                                                        onClick={(e) => { e.stopPropagation(); handleDeleteClick(minute.id, minute.title); }}
+                                                        className="p-2 rounded-full text-muted-foreground hover:bg-destructive hover:text-destructive-foreground transition-colors"
+                                                        aria-label={`Delete meeting: ${minute.title}`}
+                                                    >
+                                                        <TrashIcon className="w-5 h-5" />
+                                                    </button>
+                                                </TooltipTrigger>
+                                                <TooltipContent>
+                                                    <p>Delete</p>
+                                                </TooltipContent>
+                                            </Tooltip>
+                                        </TooltipProvider>
                                     </div>
                                 </div>
                             ))}
@@ -238,10 +294,14 @@ const AllMeetingsPage: React.FC<{
                         </div>
                     )
                 ) : !loading && (
-                    <div className="text-center text-muted-foreground py-24">
-                        <h3 className="text-xl font-semibold">No Meetings Found</h3>
-                        <p>{searchTerm ? "Try adjusting your search or sort criteria." : "Your saved meeting summaries will appear here."}</p>
-                    </div>
+                    <EmptyState
+                        title={searchTerm ? "No Meetings Found" : "No Meetings Yet"}
+                        description={searchTerm ? "Try adjusting your search or sort criteria." : "Your saved meeting summaries will appear here. Once you have a meeting, it will show up here."}
+                        action={{
+                            text: "Back to Dashboard",
+                            onClick: onBack,
+                        }}
+                    />
                 )}
                  <p className="text-xs text-muted-foreground mt-6 text-center">Your minutes are securely stored in the cloud.</p>
             </div>

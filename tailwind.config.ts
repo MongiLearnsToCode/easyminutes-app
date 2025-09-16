@@ -19,6 +19,15 @@ const config: Config = {
     },
     extend: {
       colors: {
+        coral: "var(--coral)",
+        "dark-navy": "var(--dark-navy)",
+        charcoal: "var(--charcoal)",
+        teal: "var(--teal)",
+        "electric-blue": "var(--electric-blue)",
+        "neutral-bg-light": "var(--neutral-bg-light)",
+        "neutral-bg-dark": "var(--neutral-bg-dark)",
+        "tinted-bg-light": "var(--tinted-bg-light)",
+        "tinted-bg-dark": "var(--tinted-bg-dark)",
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
         ring: "hsl(var(--ring))",

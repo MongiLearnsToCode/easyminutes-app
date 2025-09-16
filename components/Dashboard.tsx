@@ -22,6 +22,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Skeleton } from '@/components/ui/skeleton';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { ConfirmationDialog } from './ConfirmationDialog';
+import { AttendeeAvatar } from './AttendeeAvatar';
 import { Id } from '../convex/_generated/dataModel';
 // import ProPrompt from './ProPrompt';
 import { useToast } from '@/components/ui/toast';
@@ -119,9 +120,10 @@ const EditableMinutesDisplay: React.FC<{ summary: MeetingSummary; setSummary: Re
             
             <div>
                 <SectionHeader>Attendees</SectionHeader>
-                <div className="flex flex-wrap gap-2">
+                <div className="flex flex-wrap gap-4">
                     {sanitizedSummary.attendees.map((attendee, index) => (
-<div key={index} className="flex items-center group bg-muted/60 text-foreground text-sm font-medium pl-3 pr-1 py-1 rounded-full shadow-sm">
+                        <div key={index} className="flex items-center gap-2 group">
+                            <AttendeeAvatar name={attendee} />
                             <input
                                 value={attendee}
                                 onChange={(e) => handleListChange('attendees', index, e.target.value)}
@@ -1046,11 +1048,11 @@ className="flex items-center space-x-1 px-3 py-2 text-sm font-medium text-foregr
                         )}
                         {currentSummary && !isLoading && <EditableMinutesDisplay summary={currentSummary} setSummary={setCurrentSummary} />}
                         {!isLoading && !error && !currentSummary && (
-<div className="text-center text-muted-foreground pt-16">
-                                <p className="text-lg">Your meeting summary will appear here.</p>
-                                <p>Provide notes, record audio, or upload a file and click "Generate Minutes".</p>
-                                <p className="mt-4">Or, select a summary from your history.</p>
-                            </div>
+                            <EmptyState
+                                title="Generate Your First Meeting Summary"
+                                description="Provide notes, record audio, or upload a file and click 'Generate Minutes'. You can also select a past meeting from your history."
+                                icon={<FileTextIcon className="w-16 h-16 text-primary" />}
+                            />
                         )}
                     </div>
                 </div>
@@ -1080,6 +1082,19 @@ className="flex items-center space-x-1 px-3 py-2 text-sm font-medium text-foregr
             <ProPrompt
                 isOpen={proPrompt.open}
                 onClose={() => setProPrompt({ open: false, feature: '' })}
+                onGoToPricing={() => {
+                    setProPrompt({ open: false, feature: '' });
+                    onNavigate('pricing');
+                }}
+                featureLabel={proPrompt.feature}
+            />
+
+        </main>
+    );
+};
+
+export default Dashboard;
+> setProPrompt({ open: false, feature: '' })}
                 onGoToPricing={() => {
                     setProPrompt({ open: false, feature: '' });
                     onNavigate('pricing');
