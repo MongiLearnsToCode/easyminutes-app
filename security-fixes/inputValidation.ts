@@ -174,7 +174,7 @@ export const CSP_DIRECTIVES = {
   'script-src': ["'self'", "'unsafe-inline'"], // Consider removing unsafe-inline in production
   'style-src': ["'self'", "'unsafe-inline'"],
   'img-src': ["'self'", "data:", "https:"],
-  'connect-src': ["'self'", "https://ilmmogsvuqryevxbwcwk.supabase.co", "https://api.example.com"],
+  'connect-src': ["'self'", "https://*.convex.cloud", "https://api.polar.sh"],
   'font-src': ["'self'"],
   'frame-src': ["'none'"],
   'object-src': ["'none'"],

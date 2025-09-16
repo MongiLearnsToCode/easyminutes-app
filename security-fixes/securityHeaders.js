@@ -26,7 +26,7 @@ const securityHeaders = {
     "script-src 'self' 'unsafe-inline'", // Remove unsafe-inline in production
     "style-src 'self' 'unsafe-inline'",
     "img-src 'self' data: https:",
-    "connect-src 'self' https://ilmmogsvuqryevxbwcwk.supabase.co https://your-api-server.com",
+    "connect-src 'self' https://*.convex.cloud https://api.polar.sh",
     "font-src 'self'",
     "frame-src 'none'",
     "object-src 'none'",
@@ -51,7 +51,7 @@ add_header X-XSS-Protection "1; mode=block" always;
 add_header Strict-Transport-Security "max-age=31536000; includeSubDomains; preload" always;
 add_header Referrer-Policy "strict-origin-when-cross-origin" always;
 add_header Permissions-Policy "geolocation=(), microphone=(self), camera=()" always;
-add_header Content-Security-Policy "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; connect-src 'self' https://ilmmogsvuqryevxbwcwk.supabase.co; font-src 'self'; frame-src 'none'; object-src 'none'; base-uri 'self'; form-action 'self'" always;
+add_header Content-Security-Policy "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; connect-src 'self' https://*.convex.cloud https://api.polar.sh; font-src 'self'; frame-src 'none'; object-src 'none'; base-uri 'self'; form-action 'self'" always;
 */
 
 module.exports = { securityHeaders, addSecurityHeaders };

@@ -8,9 +8,9 @@
 - ✅ Created `.env.example` template for secure configuration
 - ✅ Updated `.env.local` with proper environment variables
 
-### 2. **Supabase Credentials Security**
-- ✅ Moved Supabase URL and anon key to environment variables
-- ✅ Updated `services/dbService.ts` to use `import.meta.env` variables
+### 2. **Convex Credentials Security**
+- ✅ Moved Convex URL to environment variables
+- ✅ Updated `services/dbService.ts` to use `process.env` variables
 - ✅ Added credentials to `.env.local` file
 - ✅ Updated `.gitignore` to prevent credential exposure
 
@@ -93,26 +93,33 @@ Ensure all environment variables are set in production:
 
 ```bash
 # Production environment variables
-export VITE_GEMINI_API_KEY="your_actual_gemini_key"
-export VITE_SUPABASE_URL="your_supabase_url"
-export VITE_SUPABASE_ANON_KEY="your_supabase_anon_key"
-export VITE_API_ENDPOINT="https://your-api-server.com/api"
+export GEMINI_API_KEY="your_actual_gemini_key"
+export NEXT_PUBLIC_CONVEX_URL="your_convex_url"
+export POLAR_ACCESS_TOKEN="your_polar_access_token"
 ```
 
-### 5. **Supabase Row Level Security (RLS)**
-Enable RLS in your Supabase database:
+### 5. **Convex Security Model**
+Convex provides built-in security through query and mutation handlers:
 
-```sql
--- Enable RLS on meetings table
-ALTER TABLE meetings ENABLE ROW LEVEL SECURITY;
+```typescript
+// Example of secure query with user authentication
+export const getUserMinutes = query({
+  handler: async (ctx) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) {
+      throw new Error("Not authenticated");
+    }
 
--- Create policy for authenticated users
-CREATE POLICY "Users can only see their own meetings" ON meetings
+    return await ctx.db.query('minutes')
+      .filter(q => q.eq(q.field('userId'), identity.subject))
+      .collect();
+  },
+});
 FOR ALL USING (auth.uid() = user_id);
 
 -- Create policy for authenticated inserts
-CREATE POLICY "Users can insert their own meetings" ON meetings
-FOR INSERT WITH CHECK (auth.uid() = user_id);
+// Convex automatically handles user authentication and authorization
+// through the auth context in query/mutation handlers
 ```
 
 ## 📋 SECURITY CHECKLIST FOR DEPLOYMENT
@@ -125,7 +132,7 @@ FOR INSERT WITH CHECK (auth.uid() = user_id);
 - [ ] Input validation enabled on all forms
 - [ ] File upload security implemented
 - [ ] Rate limiting configured
-- [ ] Supabase RLS policies enabled
+- [ ] Convex authentication and authorization configured
 - [ ] HTTPS enforced in production
 - [ ] Content Security Policy implemented
 
