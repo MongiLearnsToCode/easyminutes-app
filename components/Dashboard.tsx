@@ -661,6 +661,7 @@ const Dashboard: React.FC<{ onShowAll: () => void; selectedMeetingId: string | n
             try {
                 // Update timestamp on each save to reflect last modification time
                 const summaryToUpdate = await updateMinute(currentSummary);
+                setCurrentSummary(summaryToUpdate); // Update current summary with saved version
                 setOriginalSummaryForDiff(summaryToUpdate); // Update baseline after save
             } catch (e) {
                 console.error("Auto-save failed:", e);
