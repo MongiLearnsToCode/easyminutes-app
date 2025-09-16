@@ -3,7 +3,7 @@ import { MeetingSummary, ActionItem, SpeechRecognition, SpeechRecognitionEvent, 
 
 import { useQuery, useMutation } from 'convex/react';
 import { api } from '../convex/_generated/api';
-import { MicIcon, TextIcon, SpinnerIcon, CheckCircleIcon, TrashIcon, PlusIcon, UploadIcon, FileTextIcon, FileAudioIcon, HistoryIcon, SearchIcon, ArrowUpTrayIcon, DocumentDuplicateIcon, MailIcon, EditIcon } from '../constants';
+import { MicIcon, TextIcon, SpinnerIcon, CheckCircleIcon, TrashIcon, PlusIcon, UploadIcon, FileTextIcon, FileAudioIcon, ArrowUpTrayIcon, DocumentDuplicateIcon, MailIcon, EditIcon } from '../constants';
 import { Packer, Document, Paragraph, TextRun, HeadingLevel, AlignmentType, Table, TableRow, TableCell, WidthType, BorderStyle } from 'docx';
 import saveAs from 'file-saver';
 import jsPDF from 'jspdf';
@@ -13,7 +13,6 @@ import DOMPurify from 'dompurify';
 import { InputValidator } from '../security-fixes/inputValidation';
 import { SecureFileUpload } from '../security-fixes/secureFileUpload';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -203,7 +202,7 @@ className="ml-2 text-xs font-bold text-foreground bg-primary/10 px-2 py-1 rounde
     );
 };
 
-const Dashboard: React.FC<{ onShowAll: () => void; selectedMeetingId: string | null; onSavingStatusChange: (status: { isAutoSaving: boolean; hasUnsavedChanges: boolean; currentSummary: any; } | undefined) => void; currentSummary: any | null; setCurrentSummary: (summary: any | null) => void; onNavigate: (view: 'dashboard' | 'allMeetings' | 'pricing' | 'success' | 'profile' | 'settings') => void; }> = ({ onShowAll, selectedMeetingId, onSavingStatusChange, currentSummary, setCurrentSummary, onNavigate }) => {
+const Dashboard: React.FC<{ selectedMeetingId: string | null; onSavingStatusChange: (status: { isAutoSaving: boolean; hasUnsavedChanges: boolean; currentSummary: any; } | undefined) => void; currentSummary: any | null; setCurrentSummary: (summary: any | null) => void; onNavigate: (view: 'dashboard' | 'allMeetings' | 'pricing' | 'success' | 'profile' | 'settings') => void; }> = ({ selectedMeetingId, onSavingStatusChange, currentSummary, setCurrentSummary, onNavigate }) => {
     const toast = useToast();
     const [activeTab, setActiveTab] = useState<ActiveTab>('text');
     const [inputText, setInputText] = useState('');
@@ -218,7 +217,7 @@ const Dashboard: React.FC<{ onShowAll: () => void; selectedMeetingId: string | n
     const updateMinute = useMutation(api.minutes.updateMinute);
     const deleteMinute = useMutation(api.minutes.deleteMinute);
 
-    const [searchTerm, setSearchTerm] = useState('');
+
 
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
@@ -238,6 +237,13 @@ const Dashboard: React.FC<{ onShowAll: () => void; selectedMeetingId: string | n
     const recognitionRef = useRef<SpeechRecognition | null>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
     const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+    useEffect(() => {
+        if (textareaRef.current) {
+            textareaRef.current.style.height = "auto";
+            textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`;
+        }
+    }, [inputText]);
 
     // useEffect(() => {
     //     const checkTrialStatus = async () => {
@@ -748,18 +754,7 @@ const Dashboard: React.FC<{ onShowAll: () => void; selectedMeetingId: string | n
         if (e.dataTransfer.files?.length) setUploadedFile(e.dataTransfer.files[0]);
     };
 
-    const filteredMinutes = useMemo(() => {
-        if (!searchTerm) return savedMinutes;
-        const lowercasedTerm = searchTerm.toLowerCase();
-        return savedMinutes.filter(m => 
-            m.title.toLowerCase().includes(lowercasedTerm) || 
-            m.attendees.some(a => a.toLowerCase().includes(lowercasedTerm))
-        );
-    }, [savedMinutes, searchTerm]);
-    
-    const recentFilteredMinutes = useMemo(() => {
-        return filteredMinutes.slice(0, 5);
-    }, [filteredMinutes]);
+
 
     const tabClasses = (tabName: ActiveTab) =>
         `flex items-center space-x-2 px-4 py-2 rounded-lg font-medium transition-colors duration-200 cursor-pointer w-1/3 justify-center ${ 
@@ -777,7 +772,7 @@ const Dashboard: React.FC<{ onShowAll: () => void; selectedMeetingId: string | n
                 <div className="lg:col-span-2 bg-card p-4 lg:p-6 rounded-xl lg:rounded-2xl shadow-sm flex flex-col h-full order-1 lg:order-1">
                     <div className="flex flex-col h-full">
                         <h2 className="text-2xl font-bold text-foreground mb-4">Meeting Notes</h2>
-                        <div className="flex flex-col" style={{ height: 'calc(100% - 200px)' }}>
+                        <div className="flex flex-col flex-1 min-h-0">
                             <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as ActiveTab)} className="flex-shrink-0">
                                 <TabsList className="grid w-full grid-cols-3">
                                     <TabsTrigger value="text" className="flex items-center space-x-2">
@@ -800,8 +795,7 @@ const Dashboard: React.FC<{ onShowAll: () => void; selectedMeetingId: string | n
                                         value={inputText}
                                         onChange={(e) => setInputText(e.target.value)}
                                         placeholder="Paste your meeting notes or raw text here..."
-                                        className="h-full min-h-[200px] resize-none overflow-y-auto"
-                                        style={{ height: '200px' }}
+                                        className="w-full min-h-[200px] resize-none"
                                     />
                                 </TabsContent>
                             
@@ -816,7 +810,7 @@ const Dashboard: React.FC<{ onShowAll: () => void; selectedMeetingId: string | n
                                             <MicIcon className="w-5 h-5 mr-2" />
                                             {isRecording ? 'Stop Recording' : 'Start Recording'}
                                         </Button>
-                                        <div className="flex-1 p-4 border border-border rounded-lg overflow-y-auto bg-muted min-h-[150px]">
+                                        <div className="flex-1 p-4 border border-border rounded-lg overflow-y-auto bg-muted min-h-[200px]">
                                             <p className="text-muted-foreground whitespace-pre-wrap">
                                                 {transcript || 'Your live transcription will appear here...'}
                                             </p>
@@ -830,7 +824,7 @@ const Dashboard: React.FC<{ onShowAll: () => void; selectedMeetingId: string | n
                                         onDragOver={handleDragOver}
                                         onDragLeave={handleDragLeave}
                                         onDrop={handleDrop}
-                                        className={`relative flex flex-col items-center justify-center w-full h-full min-h-[200px] border-2 border-dashed rounded-lg cursor-pointer transition-colors duration-200 ${
+                                        className={`relative flex flex-col items-center justify-center w-full h-full min-h-[300px] border-2 border-dashed rounded-lg cursor-pointer transition-colors duration-200 ${
                                             isDragging ? 'border-primary bg-primary/10' : 'border-border bg-muted hover:bg-muted/80'
                                         }`}
                                     >
@@ -932,60 +926,7 @@ const Dashboard: React.FC<{ onShowAll: () => void; selectedMeetingId: string | n
                      </div>
                     </div>
 
-                        <div className="flex flex-col mt-6 flex-1 min-h-0">
-                            <div className="flex items-center justify-between mb-4 flex-shrink-0">
-                                <button onClick={onShowAll} className="text-xl font-bold text-foreground flex items-center hover:text-primary transition-colors group">
-                                    <HistoryIcon className="w-6 h-6 mr-2 text-primary transition-transform group-hover:scale-110"/>
-                                    <h3 className="font-bold text-xl text-foreground">Recent Meetings</h3>
-                                </button>
-                            </div>
-                            <div className="relative mb-4 flex-shrink-0">
-                                <Input
-                                    type="text"
-                                    placeholder="Search by title or attendee..."
-                                    value={searchTerm}
-                                    onChange={(e) => setSearchTerm(e.target.value)}
-                                    className="pl-10"
-                                />
-                                <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground"/>
-                            </div>
-                            <div className="flex-1 overflow-y-auto space-y-3 min-h-0">
-                            {recentFilteredMinutes.length > 0 ? recentFilteredMinutes.map(minute =>
-                                <div key={minute.id} onClick={() => handleSelectMinute(minute)} className={`p-4 rounded-lg cursor-pointer group transition-colors border ${currentSummary?.id === minute.id ? 'bg-primary/10 border-primary/20' : 'hover:bg-muted/60 border-transparent'}`}>
-                                    <div className="flex justify-between items-start gap-3">
-                                        <div className="flex-1 min-w-0">
-                                            <h4 className="font-semibold text-foreground truncate">{minute.title}</h4>
-                                            <p className="text-sm text-muted-foreground mt-1">{new Date(minute.createdAt).toLocaleString()}</p>
-                                        </div>
-                                        <div className="flex items-center space-x-1 transition-all duration-200">
-                                            <button
-                                                onClick={(e) => { e.stopPropagation(); handleSelectMinute(minute); }}
-                                                className="flex-shrink-0 p-2 rounded-full text-gray-400 hover:bg-primary hover:text-primary-foreground transition-colors"
-                                                aria-label="Edit meeting"
-                                            >
-                                                <EditIcon className="w-4 h-4"/>
-                                            </button>
-                                            <button
-                                                onClick={(e) => { e.stopPropagation(); handleDeleteClick(minute.id, minute.title); }}
-                                                className="flex-shrink-0 p-2 rounded-full text-gray-400 hover:bg-red-100 hover:text-red-600 transition-colors"
-                                                aria-label="Delete meeting"
-                                            >
-                                                <TrashIcon className="w-4 h-4"/>
-                                            </button>
-                                        </div>
-                                    </div>
-                                </div>
-                            ) : <p className="text-center text-muted-foreground pt-8">No saved minutes found.</p>}
-                        </div>
-                        {savedMinutes.length > 5 && (
-                            <div className="mt-4 text-center">
-<button onClick={onShowAll} className="font-semibold text-primary hover:text-primary/80 transition-colors py-2">
-                                    View All Meetings &rarr;
-                                </button>
-                            </div>
-                        )}
-<p className="text-xs text-muted-foreground mt-4 text-center">Your minutes are securely stored in the cloud.</p>
-                    </div>
+
 
                 </div>
 
