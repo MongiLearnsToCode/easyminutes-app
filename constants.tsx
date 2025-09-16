@@ -1,5 +1,5 @@
 import React from 'react';
-import { 
+import {
   Mic,
   AlignLeft,
   Upload,
@@ -18,7 +18,8 @@ import {
   LayoutGrid,
   List,
   AlertTriangle,
-  XCircle
+  XCircle,
+  Pencil
 } from 'lucide-react';
 
 export const LogoIcon = ({ className }: { className?: string }) => (
@@ -52,3 +53,4 @@ export const ViewGridIcon = LayoutGrid;
 export const ViewListIcon = List;
 export const ExclamationTriangleIcon = AlertTriangle;
 export const XCircleIcon = XCircle;
+export const EditIcon = Pencil;

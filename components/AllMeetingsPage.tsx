@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { MeetingSummary } from '../types';
 import { useQuery, useMutation } from 'convex/react';
 import { api } from '../convex/_generated/api';
-import { SearchIcon, TrashIcon, ArrowLeftIcon, HistoryIcon, FileTextIcon, ViewGridIcon, ViewListIcon } from '../constants';
+import { SearchIcon, TrashIcon, ArrowLeftIcon, HistoryIcon, FileTextIcon, ViewGridIcon, ViewListIcon, EditIcon } from '../constants';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -17,8 +17,9 @@ type SortOption = 'date-desc' | 'date-asc' | 'title-asc' | 'title-desc';
 const MeetingCard: React.FC<{
     minute: MeetingSummary;
     onSelect: (id: string) => void;
+    onEdit: (id: string) => void;
     onDelete: (id: string) => void;
-}> = ({ minute, onSelect, onDelete }) => {
+}> = ({ minute, onSelect, onEdit, onDelete }) => {
     const sanitizedTitle = DOMPurify.sanitize(minute.title);
     const sanitizedSummary = DOMPurify.sanitize(minute.summary);
 
@@ -39,13 +40,22 @@ const MeetingCard: React.FC<{
                     <p className="text-xs text-muted-foreground font-medium">
                     {minute.attendees.length} Attendee{minute.attendees.length !== 1 ? 's' : ''}
                 </p>
-                <button
-                    onClick={(e) => { e.stopPropagation(); onDelete(minute.id); }}
-                    className="p-2 rounded-full text-muted-foreground hover:bg-destructive hover:text-destructive-foreground opacity-0 group-hover:opacity-100 transition-opacity"
-                    aria-label={`Delete meeting: ${sanitizedTitle}`}
-                >
-                    <TrashIcon className="w-5 h-5" />
-                </button>
+                <div className="flex items-center space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <button
+                        onClick={(e) => { e.stopPropagation(); onEdit(minute.id); }}
+                        className="p-2 rounded-full text-muted-foreground hover:bg-primary hover:text-primary-foreground transition-colors"
+                        aria-label={`Edit meeting: ${sanitizedTitle}`}
+                    >
+                        <EditIcon className="w-5 h-5" />
+                    </button>
+                    <button
+                        onClick={(e) => { e.stopPropagation(); onDelete(minute.id); }}
+                        className="p-2 rounded-full text-muted-foreground hover:bg-destructive hover:text-destructive-foreground transition-colors"
+                        aria-label={`Delete meeting: ${sanitizedTitle}`}
+                    >
+                        <TrashIcon className="w-5 h-5" />
+                    </button>
+                </div>
             </div>
         </div>
     );
@@ -201,20 +211,29 @@ const AllMeetingsPage: React.FC<{
                                             </p>
                                         </div>
                                     </div>
-                                    <button
-                                        onClick={(e) => { e.stopPropagation(); handleDeleteClick(minute.id, minute.title); }}
-                                        className="p-2 rounded-full text-muted-foreground hover:bg-destructive hover:text-destructive-foreground opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0"
-                                        aria-label={`Delete meeting: ${minute.title}`}
-                                    >
-                                        <TrashIcon className="w-5 h-5" />
-                                    </button>
+                                    <div className="flex items-center space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                        <button
+                                            onClick={(e) => { e.stopPropagation(); onSelectMeeting(minute.id); }}
+                                            className="p-2 rounded-full text-muted-foreground hover:bg-primary hover:text-primary-foreground transition-colors"
+                                            aria-label={`Edit meeting: ${minute.title}`}
+                                        >
+                                            <EditIcon className="w-5 h-5" />
+                                        </button>
+                                        <button
+                                            onClick={(e) => { e.stopPropagation(); handleDeleteClick(minute.id, minute.title); }}
+                                            className="p-2 rounded-full text-muted-foreground hover:bg-destructive hover:text-destructive-foreground transition-colors"
+                                            aria-label={`Delete meeting: ${minute.title}`}
+                                        >
+                                            <TrashIcon className="w-5 h-5" />
+                                        </button>
+                                    </div>
                                 </div>
                             ))}
                         </div>
                     ) : (
                         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
                             {sortedAndFilteredMeetings.map(minute => (
-                                <MeetingCard key={minute.id} minute={minute} onSelect={onSelectMeeting} onDelete={(id) => handleDeleteClick(id, minute.title)} />
+                                <MeetingCard key={minute.id} minute={minute} onSelect={onSelectMeeting} onEdit={onSelectMeeting} onDelete={(id) => handleDeleteClick(id, minute.title)} />
                             ))}
                         </div>
                     )

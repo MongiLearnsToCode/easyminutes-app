@@ -3,7 +3,7 @@ import { MeetingSummary, ActionItem, SpeechRecognition, SpeechRecognitionEvent, 
 
 import { useQuery, useMutation } from 'convex/react';
 import { api } from '../convex/_generated/api';
-import { MicIcon, TextIcon, SpinnerIcon, CheckCircleIcon, TrashIcon, PlusIcon, UploadIcon, FileTextIcon, FileAudioIcon, HistoryIcon, SearchIcon, ArrowUpTrayIcon, DocumentDuplicateIcon, MailIcon } from '../constants';
+import { MicIcon, TextIcon, SpinnerIcon, CheckCircleIcon, TrashIcon, PlusIcon, UploadIcon, FileTextIcon, FileAudioIcon, HistoryIcon, SearchIcon, ArrowUpTrayIcon, DocumentDuplicateIcon, MailIcon, EditIcon } from '../constants';
 import { Packer, Document, Paragraph, TextRun, HeadingLevel, AlignmentType, Table, TableRow, TableCell, WidthType, BorderStyle } from 'docx';
 import saveAs from 'file-saver';
 import jsPDF from 'jspdf';
@@ -941,13 +941,22 @@ const Dashboard: React.FC<{ onShowAll: () => void; selectedMeetingId: string | n
                                             <h4 className="font-semibold text-foreground truncate">{minute.title}</h4>
                                             <p className="text-sm text-muted-foreground mt-1">{new Date(minute.createdAt).toLocaleString()}</p>
                                         </div>
-                                        <button 
-                                            onClick={(e) => { e.stopPropagation(); handleDeleteClick(minute.id, minute.title); }} 
-                                            className="flex-shrink-0 p-2 rounded-full text-gray-400 hover:bg-red-100 hover:text-red-600 opacity-0 group-hover:opacity-100 transition-all duration-200"
-                                            aria-label="Delete meeting"
-                                        >
-                                            <TrashIcon className="w-4 h-4"/>
-                                        </button>
+                                        <div className="flex items-center space-x-1 opacity-0 group-hover:opacity-100 transition-all duration-200">
+                                            <button
+                                                onClick={(e) => { e.stopPropagation(); handleSelectMinute(minute); }}
+                                                className="flex-shrink-0 p-2 rounded-full text-gray-400 hover:bg-primary hover:text-primary-foreground transition-colors"
+                                                aria-label="Edit meeting"
+                                            >
+                                                <EditIcon className="w-4 h-4"/>
+                                            </button>
+                                            <button
+                                                onClick={(e) => { e.stopPropagation(); handleDeleteClick(minute.id, minute.title); }}
+                                                className="flex-shrink-0 p-2 rounded-full text-gray-400 hover:bg-red-100 hover:text-red-600 transition-colors"
+                                                aria-label="Delete meeting"
+                                            >
+                                                <TrashIcon className="w-4 h-4"/>
+                                            </button>
+                                        </div>
                                     </div>
                                 </div>
                             ) : <p className="text-center text-muted-foreground pt-8">No saved minutes found.</p>}
