@@ -4,7 +4,7 @@
 
 ### 1. **API Key Security**
 - ✅ Moved Gemini API key from hardcoded values to environment variables
-- ✅ Updated `services/geminiService.ts` to use `import.meta.env.VITE_GEMINI_API_KEY`
+- ✅ Updated `services/geminiService.ts` to use server-side API route for secure access
 - ✅ Created `.env.example` template for secure configuration
 - ✅ Updated `.env.local` with proper environment variables
 

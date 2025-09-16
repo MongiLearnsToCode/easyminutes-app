@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
-import { MeetingSummary, ActionItem, SpeechRecognition, SpeechRecognitionEvent, SpeechRecognitionErrorEvent, SummarizeAudioInput } from '../types';
-import { summarizeMinutes } from '../services/geminiService';
+import { MeetingSummary, ActionItem, SpeechRecognition, SpeechRecognitionEvent, SpeechRecognitionErrorEvent } from '../types';
+
 import { useQuery, useMutation } from 'convex/react';
 import { api } from '../convex/_generated/api';
 import { MicIcon, TextIcon, SpinnerIcon, CheckCircleIcon, TrashIcon, PlusIcon, UploadIcon, FileTextIcon, FileAudioIcon, HistoryIcon, SearchIcon, ArrowUpTrayIcon, DocumentDuplicateIcon, MailIcon } from '../constants';
@@ -219,7 +219,7 @@ const Dashboard: React.FC<{ onShowAll: () => void; selectedMeetingId: string | n
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [uploadedFile, setUploadedFile] = useState<File | null>(null);
-    const [audioInput, setAudioInput] = useState<SummarizeAudioInput | null>(null);
+
     const [isProcessingFile, setIsProcessingFile] = useState(false);
     const [proPrompt, setProPrompt] = useState<{ open: boolean; feature: string }>(() => ({ open: false, feature: '' }));
     const [isDragging, setIsDragging] = useState(false);
@@ -501,7 +501,6 @@ const Dashboard: React.FC<{ onShowAll: () => void; selectedMeetingId: string | n
         setIsProcessingFile(true);
         setError(null);
         setInputText('');
-        setAudioInput(null);
         setCurrentSummary(null);
         
         toast.info('Processing file', `Analyzing ${file.name}...`);
@@ -561,7 +560,6 @@ const Dashboard: React.FC<{ onShowAll: () => void; selectedMeetingId: string | n
             processFile(uploadedFile);
         } else {
              setInputText('');
-             setAudioInput(null);
         }
     }, [uploadedFile, processFile]);
     
@@ -584,7 +582,23 @@ const Dashboard: React.FC<{ onShowAll: () => void; selectedMeetingId: string | n
             setCurrentSummary(null);
             setOriginalSummaryForDiff(null);
             try {
-                const result = await summarizeMinutes(inputToSummarize);
+                const response = await fetch('/api/summarize', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        input: inputToSummarize,
+                        type: 'text'
+                    }),
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.error || 'Failed to generate summary');
+                }
+
+                const result = await response.json();
                 
                 const newSummary = {
                     ...result,
@@ -819,11 +833,7 @@ const Dashboard: React.FC<{ onShowAll: () => void; selectedMeetingId: string | n
                                     ) : uploadedFile ? (
                                         <Card className="w-full max-w-sm">
                                             <CardContent className="text-center p-4">
-                                                {audioInput ? (
-                                                    <FileAudioIcon className="w-16 h-16 mx-auto text-primary/80 mb-2" />
-                                                ) : (
-                                                    <FileTextIcon className="w-16 h-16 mx-auto text-primary/80 mb-2" />
-                                                )}
+                                                <FileTextIcon className="w-16 h-16 mx-auto text-primary/80 mb-2" />
                                                 <p className="font-semibold text-foreground truncate">{uploadedFile.name}</p>
                                                 <Badge variant="secondary" className="mt-1">
                                                     {Math.round(uploadedFile.size / 1024)} KB
@@ -878,7 +888,6 @@ const Dashboard: React.FC<{ onShowAll: () => void; selectedMeetingId: string | n
                                     setInputText('');
                                     setTranscript('');
                                     setUploadedFile(null);
-                                    setAudioInput(null);
                                     
                                     // Clear current meeting summary
                                     setCurrentSummary(null);
