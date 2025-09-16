@@ -6,6 +6,10 @@ const getApiKey = () => {
     if (!apiKey) {
         throw new Error("GEMINI_API_KEY environment variable not set");
     }
+    // Validate API key format (should start with 'AIza')
+    if (!apiKey.startsWith('AIza')) {
+        throw new Error("GEMINI_API_KEY appears to be invalid (should start with 'AIza')");
+    }
     return apiKey;
 };
 
@@ -51,8 +55,12 @@ const schema = {
 
 export async function POST(request: NextRequest) {
   try {
+    console.log('Summarize API called');
+
     const body = await request.json();
     const { input, type } = body;
+
+    console.log('Input type:', type, 'Input length:', input?.length);
 
     if (!input) {
       return NextResponse.json({ error: 'Input is required' }, { status: 400 });
@@ -78,14 +86,18 @@ ${input}
       return NextResponse.json({ error: 'Invalid input type' }, { status: 400 });
     }
 
+    console.log('Making Gemini API call with model: gemini-1.5-flash');
+
     const result = await getAI().models.generateContent({
-      model: "gemini-2.5-flash",
+      model: "gemini-1.5-flash",
       contents: contents,
       config: {
         responseMimeType: "application/json",
         responseSchema: schema,
       }
     });
+
+    console.log('Gemini API call successful');
 
     const jsonText = result.text.trim();
     const parsedJson = JSON.parse(jsonText);
