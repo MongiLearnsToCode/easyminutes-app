@@ -64,7 +64,7 @@ const PricingPage: React.FC = () => {
   };
 
   return (
-    <div className="h-full w-full max-w-[1600px] mx-auto px-4 py-20 overflow-y-auto">
+    <div className="h-full w-full max-w-[1600px] mx-auto px-4 py-20">
       <div className="text-center mb-12">
         <h1 className="text-4xl font-bold">Choose your plan</h1>
         <p className="text-xl text-muted-foreground mt-2">Start for free, then upgrade to unlock all features.</p>

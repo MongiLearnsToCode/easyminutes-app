@@ -231,6 +231,7 @@ const Dashboard: React.FC<{ onShowAll: () => void; selectedMeetingId: string | n
     const [copyStatusText, setCopyStatusText] = useState('Copy to Clipboard');
     const { canGenerate, remaining, increment, requirePro } = useFreeGenGate();
     const [showProModal, setShowProModal] = useState(false);
+    const [lastProPromptTime, setLastProPromptTime] = useState(0);
     const openProModal = () => setShowProModal(true);
     // const [isTrial, setIsTrial] = useState(false);
     
@@ -249,12 +250,7 @@ const Dashboard: React.FC<{ onShowAll: () => void; selectedMeetingId: string | n
     // }, [session]);
 
 
-    useEffect(() => {
-        if (textareaRef.current) {
-            textareaRef.current.style.height = "auto";
-            textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`;
-        }
-    }, [inputText]);
+
 
     
     const formatSummaryAsText = (summary: MeetingSummary): string => {
@@ -655,9 +651,22 @@ const Dashboard: React.FC<{ onShowAll: () => void; selectedMeetingId: string | n
 
         const handler = setTimeout(async () => {
             if (!currentSummary) return;
-            
+
             if (subscription?.plan_type !== 'pro') {
-                toast.info('Auto-save is a Pro feature', 'Subscribe to automatically save your changes.');
+                const now = Date.now();
+                // Only show pro prompt once every 30 seconds
+                if (now - lastProPromptTime > 30000) {
+                    setLastProPromptTime(now);
+                    toast.addToast({
+                        type: 'info',
+                        title: 'Auto-save is a Pro feature',
+                        message: 'Subscribe to automatically save your changes.',
+                        action: {
+                            label: 'Upgrade',
+                            onClick: () => onNavigate('pricing')
+                        }
+                    });
+                }
                 return;
             }
 
@@ -761,7 +770,7 @@ const Dashboard: React.FC<{ onShowAll: () => void; selectedMeetingId: string | n
         
 
     return (
-        <main className="h-full w-full max-w-[1600px] mx-auto px-4 sm:px-6 md:px-8 lg:px-12 py-6 overflow-hidden">
+        <main className="h-full w-full max-w-[1600px] mx-auto px-4 sm:px-6 md:px-8 lg:px-12 py-6">
 
             <div className="h-full grid grid-cols-1 lg:grid-cols-5 gap-4 lg:gap-6 xl:gap-8">
                 {/* Left Column - Meeting Notes */}
@@ -786,13 +795,14 @@ const Dashboard: React.FC<{ onShowAll: () => void; selectedMeetingId: string | n
                                 </TabsList>
 
                                 <TabsContent value="text" className="flex-1 mt-4">
-                                    <Textarea
-                                        ref={textareaRef}
-                                        value={inputText}
-                                        onChange={(e) => setInputText(e.target.value)}
-                                        placeholder="Paste your meeting notes or raw text here..."
-                                        className="h-full min-h-[400px] resize-none overflow-y-auto"
-                                    />
+                                <Textarea
+                                    ref={textareaRef}
+                                    value={inputText}
+                                    onChange={(e) => setInputText(e.target.value)}
+                                    placeholder="Paste your meeting notes or raw text here..."
+                                    className="h-full min-h-[400px] resize-none overflow-y-auto"
+                                    style={{ height: '400px' }}
+                                />
                                 </TabsContent>
                             
                                 <TabsContent value="voice" className="flex-1 mt-4">
