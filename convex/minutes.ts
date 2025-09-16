@@ -28,8 +28,9 @@ export const addMinute = mutation({
         throw new Error("Not authenticated");
     }
 
-    const minute = await ctx.db.insert('minutes', { ...args, userId: identity.subject });
-    return minute;
+    const id = await ctx.db.insert('minutes', { ...args, userId: identity.subject });
+    const minute = await ctx.db.get(id);
+    return { ...minute, id, createdAt: minute!._creationTime };
   },
 });
 

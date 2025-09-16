@@ -8,7 +8,8 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Loader2, Upload, X } from 'lucide-react';
 import { LogoIcon } from '../constants';
 import { useCreateUser } from '../services/profileService';
-import { useConvexAuth } from 'convex/react';
+import { useQuery } from 'convex/react';
+import { api } from '../convex/_generated/api';
 
 interface OnboardingPageProps {
     onComplete: () => void;
@@ -21,18 +22,18 @@ const OnboardingPage: React.FC<OnboardingPageProps> = ({ onComplete }) => {
     });
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string>('');
-    const { user } = useConvexAuth();
+    const identity = useQuery(api.users.getCurrentUserIdentity);
     const createUser = useCreateUser();
 
     useEffect(() => {
-        if (user) {
+        if (identity) {
             setFormData(prev => ({
                 ...prev,
-                email: user.email!,
-                name: user.fullName || user.email?.split('@')[0] || ''
+                email: identity.email!,
+                name: identity.name || identity.email?.split('@')[0] || ''
             }));
         }
-    }, [user]);
+    }, [identity]);
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target;

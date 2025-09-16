@@ -2,13 +2,17 @@
 import { GoogleGenAI, Type } from "@google/genai";
 import { MeetingSummary, SummarizeAudioInput } from '../types';
 
-const apiKey = import.meta.env.VITE_GEMINI_API_KEY || import.meta.env.GEMINI_API_KEY;
+const getApiKey = () => {
+    const apiKey = process.env.GEMINI_API_KEY;
+    if (!apiKey) {
+        throw new Error("GEMINI_API_KEY environment variable not set");
+    }
+    return apiKey;
+};
 
-if (!apiKey) {
-    throw new Error("GEMINI_API_KEY environment variable not set");
-}
-
-const ai = new GoogleGenAI({ apiKey: apiKey });
+const getAI = () => {
+    return new GoogleGenAI({ apiKey: getApiKey() });
+};
 
 const schema = {
   type: Type.OBJECT,
@@ -67,7 +71,7 @@ ${input}
             };
         }
 
-        const result = await ai.models.generateContent({
+        const result = await getAI().models.generateContent({
             model: "gemini-2.5-flash",
             contents: contents,
             config: {

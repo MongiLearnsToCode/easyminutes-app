@@ -22,7 +22,7 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ onBack }) => {
     const [formData, setFormData] = useState({
         name: '',
         email: '',
-        avatar_url: '',
+        image: '',
     });
     const [avatarFile, setAvatarFile] = useState<File | null>(null);
     const [avatarPreview, setAvatarPreview] = useState<string>('');
@@ -39,9 +39,9 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ onBack }) => {
             setFormData({
                 name: profile.name,
                 email: profile.email,
-                avatar_url: profile.avatar_url || '',
+                image: profile.image || '',
             });
-            setAvatarPreview(profile.avatar_url || '');
+            setAvatarPreview(profile.image || '');
             setIsLoading(false);
         }
     }, [profile]);
@@ -68,7 +68,7 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ onBack }) => {
         try {
             await updateUserProfile({
                 name: formData.name.trim(),
-                avatar_url: formData.avatar_url || null,
+                image: formData.image || null,
             });
 
             setIsEditing(false);
@@ -156,9 +156,9 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ onBack }) => {
                         <div className="flex items-center space-x-6">
                             <div className="relative">
                                 <Avatar className="h-20 w-20">
-                                    <AvatarImage 
-                                        src={avatarPreview || profile?.avatar_url} 
-                                        alt="Profile avatar" 
+                                    <AvatarImage
+                                        src={avatarPreview || profile?.image}
+                                        alt="Profile avatar"
                                     />
                                     <AvatarFallback className="text-lg">
                                         {profile?.name ? getInitials(profile.name) : 'U'}
@@ -222,9 +222,9 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ onBack }) => {
                                         setFormData({
                                             name: profile?.name || '',
                                             email: profile?.email || '',
-                                            avatar_url: profile?.avatar_url || '',
+                                            image: profile?.image || '',
                                         });
-                                        setAvatarPreview(profile?.avatar_url || '');
+                                        setAvatarPreview(profile?.image || '');
                                         setAvatarFile(null);
                                         setError('');
                                         setSuccess('');

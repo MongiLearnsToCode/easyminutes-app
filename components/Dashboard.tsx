@@ -22,12 +22,14 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Skeleton } from '@/components/ui/skeleton';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { ConfirmationDialog } from './ConfirmationDialog';
+import { Id } from '../convex/_generated/dataModel';
 // import ProPrompt from './ProPrompt';
 import { useToast } from '@/components/ui/toast';
 import { USER_MESSAGES } from '../constants/userMessages';
 import { useFreeGenGate, gateAndGenerate } from '../lib/useFreeGenGate';
 import BlockingProModal from './BlockingProModal';
 // import BlockingProModal from './BlockingProModal';
+import ProPrompt from './ProPrompt';
 import { useGetSubscription } from '../services/subscriptionService';
 
 type ActiveTab = 'text' | 'voice' | 'upload';
@@ -207,7 +209,7 @@ const Dashboard: React.FC<{ onShowAll: () => void; selectedMeetingId: string | n
     const [deleteConfirmation, setDeleteConfirmation] = useState<{ isOpen: boolean; meetingId: string | null; meetingTitle: string }>({ isOpen: false, meetingId: null, meetingTitle: '' });
     const [isDeleting, setIsDeleting] = useState(false);
 
-    const savedMinutes = useQuery(api.minutes.getAllMinutes) || [];
+    const savedMinutes = useQuery(api.minutes.getAllMinutes)?.map(m => ({...m, id: m._id, createdAt: m._creationTime})) || [];
     const addMinute = useMutation(api.minutes.addMinute);
     const updateMinute = useMutation(api.minutes.updateMinute);
     const deleteMinute = useMutation(api.minutes.deleteMinute);
@@ -219,7 +221,7 @@ const Dashboard: React.FC<{ onShowAll: () => void; selectedMeetingId: string | n
     const [uploadedFile, setUploadedFile] = useState<File | null>(null);
     const [audioInput, setAudioInput] = useState<SummarizeAudioInput | null>(null);
     const [isProcessingFile, setIsProcessingFile] = useState(false);
-    // const [proPrompt, setProPrompt] = useState<{ open: boolean; feature: string }>(() => ({ open: false, feature: '' }));
+    const [proPrompt, setProPrompt] = useState<{ open: boolean; feature: string }>(() => ({ open: false, feature: '' }));
     const [isDragging, setIsDragging] = useState(false);
     const [isAutoSaving, setIsAutoSaving] = useState(false);
     const [copyStatusText, setCopyStatusText] = useState('Copy to Clipboard');
@@ -587,7 +589,7 @@ const Dashboard: React.FC<{ onShowAll: () => void; selectedMeetingId: string | n
                 const newSummary = {
                     ...result,
                     id: Date.now().toString(),
-                    createdAt: new Date().toISOString()
+                    createdAt: Date.now()
                 };
                 
                 setCurrentSummary(newSummary);
@@ -688,7 +690,7 @@ const Dashboard: React.FC<{ onShowAll: () => void; selectedMeetingId: string | n
         
         setIsDeleting(true);
         try {
-            await deleteMinute({ id: deleteConfirmation.meetingId });
+            await deleteMinute({ id: deleteConfirmation.meetingId as Id<"minutes"> });
             if (currentSummary?.id === deleteConfirmation.meetingId) {
                 setCurrentSummary(null);
                 setOriginalSummaryForDiff(null);
@@ -1054,6 +1056,16 @@ className="flex items-center space-x-1 px-3 py-2 text-sm font-medium text-foregr
                     setShowProModal(false);
                     onNavigate('pricing');
                 }}
+            />
+
+            <ProPrompt
+                isOpen={proPrompt.open}
+                onClose={() => setProPrompt({ open: false, feature: '' })}
+                onGoToPricing={() => {
+                    setProPrompt({ open: false, feature: '' });
+                    onNavigate('pricing');
+                }}
+                featureLabel={proPrompt.feature}
             />
 
         </main>

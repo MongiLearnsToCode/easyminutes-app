@@ -1,10 +1,10 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { CheckCircleIcon } from '../constants';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Loader2 } from 'lucide-react';
-import { subscriptionService } from '../services/subscriptionService';
+import { useUpsertSubscription } from '../services/subscriptionService';
 import { polarService } from '../services/polarService';
 
 interface SuccessPageProps {
@@ -18,6 +18,7 @@ const SuccessPage: React.FC<SuccessPageProps> = ({ onNavigate }) => {
         planType: string;
         status: string;
     } | null>(null);
+    const upsertSubscription = useUpsertSubscription();
 
     useEffect(() => {
         const processPaymentSuccess = async () => {
@@ -39,14 +40,13 @@ const SuccessPage: React.FC<SuccessPageProps> = ({ onNavigate }) => {
 
                 const planType = checkout.data.attributes.variant_name.toLowerCase() as 'pro' | 'trial';
                 
-                await subscriptionService.upsertUserSubscription({
+                await upsertSubscription({
                     plan_type: planType,
                     status: 'active',
                     meetings_used: 0,
                     meetings_limit: planType === 'pro' ? 100 : 1,
-                    current_period_start: new Date().toISOString(),
-                    current_period_end: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
-                    created_at: new Date().toISOString(),
+                    current_period_start: Math.floor(Date.now() / 1000),
+                    current_period_end: Math.floor((Date.now() + 30 * 24 * 60 * 60 * 1000) / 1000),
                 });
 
                 setSubscriptionDetails({

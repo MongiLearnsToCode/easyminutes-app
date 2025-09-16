@@ -6,17 +6,19 @@ class AuthService {
   async signUp(email, password, fullName?) {
     // This is a placeholder for a real authentication implementation.
     // In a real app, you would use an authentication provider like Clerk, Auth0, or your own.
-    const user = await convex.mutation(api.auth.logIn, { email, password });
-    return user;
+    // const user = await convex.action(api.auth.signIn, { email, password });
+    // return user;
+    return null;
   }
 
   async signIn(email, password) {
-    const user = await convex.mutation(api.auth.logIn, { email, password });
-    return user;
+    // const user = await convex.action(api.auth.signIn, { email, password });
+    // return user;
+    return null;
   }
 
   async signOut() {
-    await convex.mutation(api.auth.logOut);
+    // await convex.action(api.auth.signOut);
   }
 
   onAuthStateChange(callback) {

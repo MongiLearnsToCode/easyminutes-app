@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useEffect } from 'react';
@@ -8,11 +9,8 @@ import PricingPage from '../components/PricingPage';
 import ProfilePage from '../components/ProfilePage';
 import { ToastProvider } from '../components/ui/toast';
 import { ThemeProvider } from '../contexts/ThemeContext';
-import { useQuery } from 'convex/react';
-import { api } from '../convex/_generated/api';
 
 export default function AppClient() {
-    const session = useQuery(api.users.getCurrentUser);
     const [view, setView] = useState<'dashboard' | 'allMeetings' | 'pricing' | 'profile' | 'settings'>('dashboard');
     const [selectedMeetingId, setSelectedMeetingId] = useState<string | null>(null);
     const [currentSummary, setCurrentSummary] = useState<any | null>(null);
@@ -57,7 +55,7 @@ export default function AppClient() {
         <ThemeProvider>
             <ToastProvider>
                 <div className="min-h-screen bg-background font-sans text-foreground">
-                    <Header session={session} currentView={view} onNavigate={handleNavigate} savingStatus={savingStatus} onSignUpClick={() => {}} />
+                    <Header currentView={view} onNavigate={handleNavigate} savingStatus={savingStatus} />
                     {view === 'dashboard' && <Dashboard onShowAll={() => handleNavigate('allMeetings')} selectedMeetingId={selectedMeetingId} onSavingStatusChange={setSavingStatus} currentSummary={currentSummary} setCurrentSummary={setCurrentSummary} onNavigate={handleNavigate} />}
                     {view === 'allMeetings' && <AllMeetingsPage onSelectMeeting={handleSelectMeetingFromAll} onBack={() => handleNavigate('dashboard')} />}
                     {view === 'pricing' && <PricingPage />}

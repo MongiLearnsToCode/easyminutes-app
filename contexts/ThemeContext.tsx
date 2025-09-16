@@ -36,7 +36,9 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
   useEffect(() => {
     if (!authLoading) {
       if (isAuthenticated && profile) {
-        setTheme(profile.theme_preference || 'system');
+        // Theme preference could be stored in profile, but for now use localStorage
+        const stored = localStorage.getItem('theme') as Theme;
+        setTheme(stored || 'system');
       } else {
         const stored = localStorage.getItem('theme') as Theme;
         setTheme(stored || 'system');
@@ -71,13 +73,14 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
   const handleSetTheme = async (newTheme: Theme) => {
     setTheme(newTheme);
     localStorage.setItem('theme', newTheme);
-    if (isAuthenticated) {
-      try {
-        await updateUserProfile({ theme_preference: newTheme });
-      } catch (error) {
-        console.error('Failed to update theme preference:', error);
-      }
-    }
+    // Theme is stored in localStorage
+    // if (isAuthenticated) {
+    //   try {
+    //     await updateUserProfile({ theme_preference: newTheme });
+    //   } catch (error) {
+    //     console.error('Failed to update theme preference:', error);
+    //   }
+    // }
   };
 
   return (

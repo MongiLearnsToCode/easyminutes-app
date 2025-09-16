@@ -6,7 +6,7 @@ export interface ActionItem {
 
 export interface MeetingSummary {
   id: string;
-  createdAt: string;
+  createdAt: number;
   title: string;
   attendees: string[];
   summary: string;

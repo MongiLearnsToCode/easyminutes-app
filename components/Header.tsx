@@ -1,26 +1,27 @@
-
 import React, { useState } from 'react';
 import { useTheme } from '../contexts/ThemeContext';
 import UserAvatar from './UserAvatar';
 import { LogoIcon, SpinnerIcon, CheckCircleIcon } from '../constants';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
+import { useConvexAuth } from 'convex/react';
+import { useAuthActions } from '@convex-dev/auth/react';
 
 interface HeaderProps {
     currentView: 'dashboard' | 'allMeetings' | 'pricing' | 'profile' | 'settings' | 'success';
     onNavigate: (view: 'dashboard' | 'allMeetings' | 'pricing' | 'profile' | 'settings') => void;
-    session: any;
     savingStatus?: {
         isAutoSaving: boolean;
         hasUnsavedChanges: boolean;
         currentSummary: any;
     };
-    onSignUpClick: () => void;
 }
 
-const Header: React.FC<HeaderProps> = ({ currentView, onNavigate, session, savingStatus, onSignUpClick }) => {
+const Header: React.FC<HeaderProps> = ({ currentView, onNavigate, savingStatus }) => {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const { theme, setTheme, actualTheme } = useTheme();
+    const { isAuthenticated } = useConvexAuth();
+    const { signOut } = useAuthActions();
 
     const handleNavigation = (view: 'dashboard' | 'allMeetings' | 'pricing') => {
         onNavigate(view);
@@ -84,21 +85,12 @@ const Header: React.FC<HeaderProps> = ({ currentView, onNavigate, session, savin
                         </nav>
                         
                         {/* User Avatar */}
-                        {session ? (
+                        {isAuthenticated && (
                             <UserAvatar 
                                 size="md"
                                 onProfileClick={() => onNavigate('profile')}
                                 onSettingsClick={() => onNavigate('settings')}
-                                session={session}
                             />
-                        ) : (
-                            <Button 
-                                variant="default"
-                                size="sm"
-                                onClick={onSignUpClick}
-                            >
-                                Sign In
-                            </Button>
                         )}
                         {/* Mobile/Tablet Hamburger Menu */}
                         <Sheet open={isMenuOpen} onOpenChange={setIsMenuOpen}>
@@ -160,6 +152,18 @@ const Header: React.FC<HeaderProps> = ({ currentView, onNavigate, session, savin
                                         </Button>
                                     </nav>
                                     
+                                    {isAuthenticated && (
+                                        <div className="p-4 border-t border-border">
+                                            <Button
+                                                variant="outline"
+                                                size="lg"
+                                                onClick={() => signOut()}
+                                                className="w-full"
+                                            >
+                                                Logout
+                                            </Button>
+                                        </div>
+                                    )}
                                 </div>
                             </SheetContent>
                         </Sheet>

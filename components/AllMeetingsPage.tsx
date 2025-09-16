@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Input } from '@/components/ui/input';
 import { ConfirmationDialog } from './ConfirmationDialog';
 import DOMPurify from 'dompurify';
+import { Id } from '../convex/_generated/dataModel';
 
 type Layout = 'list' | 'grid';
 type SortOption = 'date-desc' | 'date-asc' | 'title-asc' | 'title-desc';
@@ -54,7 +55,7 @@ const AllMeetingsPage: React.FC<{
     onSelectMeeting: (id: string) => void;
     onBack: () => void;
 }> = ({ onSelectMeeting, onBack }) => {
-    const meetings = useQuery(api.minutes.getAllMinutes) || [];
+    const meetings = useQuery(api.minutes.getAllMinutes)?.map(m => ({...m, id: m._id, createdAt: m._creationTime})) || [];
     const deleteMinute = useMutation(api.minutes.deleteMinute);
     const [searchTerm, setSearchTerm] = useState('');
     const [error, setError] = useState<string | null>(null);
@@ -73,7 +74,7 @@ const AllMeetingsPage: React.FC<{
         
         setIsDeleting(true);
         try {
-            await deleteMinute({ id: deleteConfirmation.meetingId });
+            await deleteMinute({ id: deleteConfirmation.meetingId as Id<"minutes"> });
             setDeleteConfirmation({ isOpen: false, meetingId: null, meetingTitle: '' });
         } catch (e) {
             setError(e instanceof Error ? e.message : "Failed to delete the meeting summary.");
@@ -106,11 +107,11 @@ const AllMeetingsPage: React.FC<{
                 processedMeetings.sort((a, b) => b.title.localeCompare(a.title));
                 break;
             case 'date-asc':
-                processedMeetings.sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
+                processedMeetings.sort((a, b) => a.createdAt - b.createdAt);
                 break;
             case 'date-desc':
             default:
-                processedMeetings.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+                processedMeetings.sort((a, b) => b.createdAt - a.createdAt);
                 break;
         }
 
