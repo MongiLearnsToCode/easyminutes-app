@@ -239,12 +239,7 @@ const Dashboard: React.FC<{ selectedMeetingId: string | null; onSavingStatusChan
     const fileInputRef = useRef<HTMLInputElement>(null);
     const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-    useEffect(() => {
-        if (textareaRef.current) {
-            textareaRef.current.style.height = "auto";
-            textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`;
-        }
-    }, [inputText]);
+
 
     // useEffect(() => {
     //     const checkTrialStatus = async () => {
@@ -790,15 +785,17 @@ const Dashboard: React.FC<{ selectedMeetingId: string | null; onSavingStatusChan
                                     </TabsTrigger>
                                 </TabsList>
 
-                                <TabsContent value="text" className="flex-1 mt-4">
-                                    <Textarea
-                                        ref={textareaRef}
-                                        value={inputText}
-                                        onChange={(e) => setInputText(e.target.value)}
-                                        placeholder="Paste your meeting notes or raw text here..."
-                                        className="w-full min-h-[200px] resize-none"
-                                    />
-                                </TabsContent>
+                                 <TabsContent value="text" className="flex-1 mt-4">
+                                     <div className="h-[300px] overflow-hidden rounded-md border border-input bg-background">
+                                         <Textarea
+                                             ref={textareaRef}
+                                             value={inputText}
+                                             onChange={(e) => setInputText(e.target.value)}
+                                             placeholder="Paste your meeting notes or raw text here..."
+                                             className="w-full h-full resize-none overflow-y-auto border-0 focus:ring-0 focus:ring-offset-0"
+                                         />
+                                     </div>
+                                 </TabsContent>
                             
                                 <TabsContent value="voice" className="flex-1 mt-4">
                                     <div className="flex flex-col h-full space-y-4">
@@ -811,7 +808,7 @@ const Dashboard: React.FC<{ selectedMeetingId: string | null; onSavingStatusChan
                                             <MicIcon className="w-5 h-5 mr-2" />
                                             {isRecording ? 'Stop Recording' : 'Start Recording'}
                                         </Button>
-                                        <div className="flex-1 p-4 border border-border rounded-lg overflow-y-auto bg-muted min-h-[200px]">
+                                         <div className="flex-1 p-4 border border-border rounded-lg overflow-y-auto bg-muted" style={{ height: '300px', maxHeight: '300px' }}>
                                             <p className="text-muted-foreground whitespace-pre-wrap">
                                                 {transcript || 'Your live transcription will appear here...'}
                                             </p>
@@ -820,15 +817,15 @@ const Dashboard: React.FC<{ selectedMeetingId: string | null; onSavingStatusChan
                                     </div>
                                 </TabsContent>
                             
-                                <TabsContent value="upload" className="flex-1 mt-4">
-                                    <div
-                                        onDragOver={handleDragOver}
-                                        onDragLeave={handleDragLeave}
-                                        onDrop={handleDrop}
-                                        className={`relative flex flex-col items-center justify-center w-full h-full min-h-[300px] border-2 border-dashed rounded-lg cursor-pointer transition-colors duration-200 ${
-                                            isDragging ? 'border-primary bg-primary/10' : 'border-border bg-muted hover:bg-muted/80'
-                                        }`}
-                                    >
+                                 <TabsContent value="upload" className="flex-1 mt-4">
+                                     <div
+                                         onDragOver={handleDragOver}
+                                         onDragLeave={handleDragLeave}
+                                         onDrop={handleDrop}
+                                         className={`relative flex flex-col items-center justify-center w-full h-[300px] border-2 border-dashed rounded-lg cursor-pointer transition-colors duration-200 overflow-hidden ${
+                                             isDragging ? 'border-primary bg-primary/10' : 'border-border bg-muted hover:bg-muted/80'
+                                         }`}
+                                     >
                                     <input 
                                         ref={fileInputRef} 
                                         type="file" 
