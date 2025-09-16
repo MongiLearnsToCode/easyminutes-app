@@ -777,7 +777,7 @@ const Dashboard: React.FC<{ onShowAll: () => void; selectedMeetingId: string | n
                 <div className="lg:col-span-2 bg-card p-4 lg:p-6 rounded-xl lg:rounded-2xl shadow-sm flex flex-col h-full order-1 lg:order-1">
                     <div className="flex flex-col h-full">
                         <h2 className="text-2xl font-bold text-foreground mb-4">Meeting Notes</h2>
-                        <div className="flex-1 flex flex-col min-h-0">
+                        <div className="flex flex-col" style={{ height: 'calc(100% - 200px)' }}>
                             <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as ActiveTab)} className="flex-shrink-0">
                                 <TabsList className="grid w-full grid-cols-3">
                                     <TabsTrigger value="text" className="flex items-center space-x-2">
@@ -795,14 +795,14 @@ const Dashboard: React.FC<{ onShowAll: () => void; selectedMeetingId: string | n
                                 </TabsList>
 
                                 <TabsContent value="text" className="flex-1 mt-4">
-                                <Textarea
-                                    ref={textareaRef}
-                                    value={inputText}
-                                    onChange={(e) => setInputText(e.target.value)}
-                                    placeholder="Paste your meeting notes or raw text here..."
-                                    className="h-full min-h-[400px] resize-none overflow-y-auto"
-                                    style={{ height: '400px' }}
-                                />
+                                    <Textarea
+                                        ref={textareaRef}
+                                        value={inputText}
+                                        onChange={(e) => setInputText(e.target.value)}
+                                        placeholder="Paste your meeting notes or raw text here..."
+                                        className="h-full min-h-[200px] resize-none overflow-y-auto"
+                                        style={{ height: '200px' }}
+                                    />
                                 </TabsContent>
                             
                                 <TabsContent value="voice" className="flex-1 mt-4">
@@ -816,7 +816,7 @@ const Dashboard: React.FC<{ onShowAll: () => void; selectedMeetingId: string | n
                                             <MicIcon className="w-5 h-5 mr-2" />
                                             {isRecording ? 'Stop Recording' : 'Start Recording'}
                                         </Button>
-                                        <div className="flex-1 p-4 border border-border rounded-lg overflow-y-auto bg-muted min-h-0">
+                                        <div className="flex-1 p-4 border border-border rounded-lg overflow-y-auto bg-muted min-h-[150px]">
                                             <p className="text-muted-foreground whitespace-pre-wrap">
                                                 {transcript || 'Your live transcription will appear here...'}
                                             </p>
@@ -830,7 +830,7 @@ const Dashboard: React.FC<{ onShowAll: () => void; selectedMeetingId: string | n
                                         onDragOver={handleDragOver}
                                         onDragLeave={handleDragLeave}
                                         onDrop={handleDrop}
-                                        className={`relative flex flex-col items-center justify-center w-full h-full min-h-[400px] border-2 border-dashed rounded-lg cursor-pointer transition-colors duration-200 ${
+                                        className={`relative flex flex-col items-center justify-center w-full h-full min-h-[200px] border-2 border-dashed rounded-lg cursor-pointer transition-colors duration-200 ${
                                             isDragging ? 'border-primary bg-primary/10' : 'border-border bg-muted hover:bg-muted/80'
                                         }`}
                                     >
@@ -932,7 +932,7 @@ const Dashboard: React.FC<{ onShowAll: () => void; selectedMeetingId: string | n
                      </div>
                     </div>
 
-                        <div className="flex-1 flex flex-col min-h-0 mt-6">
+                        <div className="flex flex-col mt-6 flex-1 min-h-0">
                             <div className="flex items-center justify-between mb-4 flex-shrink-0">
                                 <button onClick={onShowAll} className="text-xl font-bold text-foreground flex items-center hover:text-primary transition-colors group">
                                     <HistoryIcon className="w-6 h-6 mr-2 text-primary transition-transform group-hover:scale-110"/>
