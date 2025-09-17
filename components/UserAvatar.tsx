@@ -30,7 +30,7 @@ const UserAvatar: React.FC<UserAvatarProps> = ({ size = 'md', onProfileClick, on
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" className={`relative rounded-full ${getSizeClasses()}`}>
           <Avatar className={getSizeClasses()}>
-            <AvatarImage src={String(user?.picture || '')} alt={String(user?.name || '')} />
+            <AvatarImage src={String(user?.image || '')} alt={String(user?.name || '')} />
             <AvatarFallback>{String(user?.name || 'U').charAt(0)}</AvatarFallback>
           </Avatar>
         </Button>
