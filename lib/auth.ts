@@ -9,7 +9,6 @@ const db = new Database(dbPath);
 export const auth = betterAuth({
   database: db,
   baseURL: process.env.BETTER_AUTH_URL || "http://localhost:3000",
-  basePath: "/api/auth",
   emailAndPassword: {
     enabled: true,
   },
