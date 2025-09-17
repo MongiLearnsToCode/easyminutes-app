@@ -3,10 +3,7 @@ import Database from "better-sqlite3";
 import path from "path";
 
 const dbPath = path.join(process.cwd(), "auth.db");
-console.log("Database path:", dbPath);
-
 const db = new Database(dbPath);
-console.log("Database created successfully");
 
 export const auth = betterAuth({
   database: db,
@@ -15,5 +12,3 @@ export const auth = betterAuth({
     enabled: true,
   },
 });
-
-console.log("Better Auth initialized successfully");
