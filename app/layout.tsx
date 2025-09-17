@@ -12,6 +12,13 @@ const plusJakartaSans = Plus_Jakarta_Sans({
 export const metadata: Metadata = {
   title: "Easy Minutes",
   description: "Generate meeting minutes in seconds",
+  icons: {
+    icon: "/favicon.svg",
+    shortcut: "/favicon.svg",
+    apple: "/apple-touch-icon.png",
+  },
+  manifest: "/manifest.json",
+  themeColor: "#3b82f6",
 };
 
 export default function RootLayout({
