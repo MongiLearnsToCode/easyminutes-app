@@ -1,7 +1,7 @@
 
 "use client";
 
-import { signIn } from "next-auth/react";
+import { authClient } from "@/lib/auth-client";
 import { useState } from "react";
 
 export function SignIn() {
@@ -15,10 +15,9 @@ export function SignIn() {
     setLoading(true);
 
     try {
-      const result = await signIn("credentials", {
+      const result = await authClient.signIn.email({
         email,
         password,
-        redirect: false,
       });
 
       if (result?.error) {

@@ -1,15 +1,15 @@
 'use client';
 
-import { useConvexAuth } from 'convex/react';
+import { authClient } from '@/lib/auth-client';
 import AppClient from './AppClient';
-import { SignIn } from '../components/SignIn'; // This component will be created later
+import { SignIn } from '../components/SignIn';
 
 export default function Page() {
-  const { isAuthenticated, isLoading } = useConvexAuth();
+  const { data: session, isPending } = authClient.useSession();
 
-  if (isLoading) {
+  if (isPending) {
     return <div className="min-h-screen bg-background" />;
   }
 
-  return isAuthenticated ? <AppClient /> : <SignIn />;
+  return session ? <AppClient /> : <SignIn />;
 }

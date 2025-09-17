@@ -1,28 +1,17 @@
-import { NextAuthOptions } from "next-auth"
+import { betterAuth } from "better-auth";
+import Database from "better-sqlite3";
 
-export const authOptions: NextAuthOptions = {
-  providers: [
-    // Add providers here as needed
-    // Example: GoogleProvider, GitHubProvider, etc.
-  ],
-  pages: {
-    signIn: "/signin",
+const db = new Database("./auth.db");
+
+export const auth = betterAuth({
+  database: db,
+  emailAndPassword: {
+    enabled: true,
   },
-  session: {
-    strategy: "jwt",
-  },
-  callbacks: {
-    async jwt({ token, user }) {
-      if (user) {
-        token.id = user.id
-      }
-      return token
-    },
-    async session({ session, token }) {
-      if (token) {
-        session.user.id = token.id as string
-      }
-      return session
+  socialProviders: {
+    google: {
+      clientId: process.env.GOOGLE_CLIENT_ID || "",
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET || "",
     },
   },
-}
+});

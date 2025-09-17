@@ -2,7 +2,7 @@ import React from 'react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
-import { useSession, signOut } from 'next-auth/react';
+import { authClient } from '@/lib/auth-client';
 
 interface UserAvatarProps {
   size?: 'sm' | 'md' | 'lg';
@@ -11,7 +11,7 @@ interface UserAvatarProps {
 }
 
 const UserAvatar: React.FC<UserAvatarProps> = ({ size = 'md', onProfileClick, onSettingsClick }) => {
-  const { data: session } = useSession();
+  const { data: session } = authClient.useSession();
   const user = session?.user;
 
   const getSizeClasses = () => {
@@ -48,7 +48,7 @@ const UserAvatar: React.FC<UserAvatarProps> = ({ size = 'md', onProfileClick, on
         <DropdownMenuItem onClick={onProfileClick}>Profile</DropdownMenuItem>
         <DropdownMenuItem onClick={onSettingsClick}>Settings</DropdownMenuItem>
         <DropdownMenuSeparator />
-        <DropdownMenuItem onClick={() => signOut({ callbackUrl: '/' })}>Log out</DropdownMenuItem>
+         <DropdownMenuItem onClick={() => authClient.signOut({ callbackUrl: '/' })}>Log out</DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
   );
