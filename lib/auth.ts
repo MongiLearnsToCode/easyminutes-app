@@ -2,20 +2,18 @@ import { betterAuth } from "better-auth";
 import Database from "better-sqlite3";
 import path from "path";
 
-// Use a more reliable path for the database
 const dbPath = path.join(process.cwd(), "auth.db");
+console.log("Database path:", dbPath);
+
 const db = new Database(dbPath);
+console.log("Database created successfully");
 
 export const auth = betterAuth({
   database: db,
-  baseURL: process.env.BETTER_AUTH_URL || "http://localhost:3000",
+  baseURL: process.env.BETTER_AUTH_URL || "https://easyminutes-app.vercel.app",
   emailAndPassword: {
     enabled: true,
   },
-  socialProviders: {
-    google: {
-      clientId: process.env.GOOGLE_CLIENT_ID || "",
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET || "",
-    },
-  },
 });
+
+console.log("Better Auth initialized successfully");
