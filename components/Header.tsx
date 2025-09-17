@@ -4,8 +4,7 @@ import UserAvatar from './UserAvatar';
 import { LogoIcon, SpinnerIcon, CheckCircleIcon } from '../constants';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
-import { useConvexAuth } from 'convex/react';
-import { useAuthActions } from '@convex-dev/auth/react';
+import { useSession, signOut } from 'next-auth/react';
 
 interface HeaderProps {
     currentView: 'dashboard' | 'allMeetings' | 'pricing' | 'profile' | 'settings' | 'success';
@@ -20,8 +19,8 @@ interface HeaderProps {
 const Header: React.FC<HeaderProps> = ({ currentView, onNavigate, savingStatus }) => {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const { theme, setTheme, actualTheme } = useTheme();
-    const { isAuthenticated } = useConvexAuth();
-    const { signOut } = useAuthActions();
+    const { data: session, status } = useSession();
+    const isAuthenticated = status === 'authenticated';
 
     const handleNavigation = (view: 'dashboard' | 'allMeetings' | 'pricing') => {
         onNavigate(view);
@@ -157,7 +156,7 @@ const Header: React.FC<HeaderProps> = ({ currentView, onNavigate, savingStatus }
                                             <Button
                                                 variant="outline"
                                                 size="lg"
-                                                onClick={() => signOut()}
+                                                onClick={() => signOut({ callbackUrl: '/' })}
                                                 className="w-full"
                                             >
                                                 Logout

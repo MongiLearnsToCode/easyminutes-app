@@ -2,9 +2,7 @@ import React from 'react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
-import { useQuery } from 'convex/react';
-import { api } from '../convex/_generated/api';
-import { useAuthActions } from '@convex-dev/auth/react';
+import { useSession, signOut } from 'next-auth/react';
 
 interface UserAvatarProps {
   size?: 'sm' | 'md' | 'lg';
@@ -13,8 +11,8 @@ interface UserAvatarProps {
 }
 
 const UserAvatar: React.FC<UserAvatarProps> = ({ size = 'md', onProfileClick, onSettingsClick }) => {
-  const user = useQuery(api.users.getCurrentUserIdentity);
-  const { signOut } = useAuthActions();
+  const { data: session } = useSession();
+  const user = session?.user;
 
   const getSizeClasses = () => {
     switch (size) {
@@ -50,7 +48,7 @@ const UserAvatar: React.FC<UserAvatarProps> = ({ size = 'md', onProfileClick, on
         <DropdownMenuItem onClick={onProfileClick}>Profile</DropdownMenuItem>
         <DropdownMenuItem onClick={onSettingsClick}>Settings</DropdownMenuItem>
         <DropdownMenuSeparator />
-        <DropdownMenuItem onClick={() => signOut()}>Log out</DropdownMenuItem>
+        <DropdownMenuItem onClick={() => signOut({ callbackUrl: '/' })}>Log out</DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
   );

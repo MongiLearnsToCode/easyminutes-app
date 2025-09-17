@@ -1,9 +1,7 @@
 'use client';
 
-import { ConvexReactClient } from 'convex/react';
-import { ConvexAuthProvider } from '@convex-dev/auth/react';
-import { convex } from '../services/dbService';
+import { SessionProvider } from 'next-auth/react';
 
 export default function Providers({ children }: { children: React.ReactNode }) {
-  return <ConvexAuthProvider client={convex}>{children}</ConvexAuthProvider>;
+  return <SessionProvider>{children}</SessionProvider>;
 }

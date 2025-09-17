@@ -1,5 +1,7 @@
 import { NextResponse } from 'next/server';
 import { GoogleGenAI } from "@google/genai";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
 
 const getApiKey = () => {
     const apiKey = process.env.GEMINI_API_KEY;
@@ -14,6 +16,11 @@ const getApiKey = () => {
 
 export async function GET() {
   try {
+    const session = await getServerSession(authOptions);
+    if (!session) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
     console.log('Testing Gemini API key...');
 
     const apiKey = getApiKey();
