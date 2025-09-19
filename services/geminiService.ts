@@ -1,5 +1,5 @@
 
-import { GoogleGenAI, Type } from "@google/genai";
+import { GoogleGenAI, Type, ContentListUnion } from "@google/genai";
 import { MeetingSummary, SummarizeAudioInput } from '../types';
 
 const getApiKey = () => {
@@ -53,7 +53,7 @@ const schema = {
 
 export const summarizeMinutes = async (input: string | SummarizeAudioInput): Promise<Omit<MeetingSummary, 'id' | 'createdAt'>> => {
     try {
-        let contents: any;
+        let contents: ContentListUnion;
 
         if (typeof input === 'string') {
             contents = `Based on the following meeting notes or transcription, please generate a structured summary.

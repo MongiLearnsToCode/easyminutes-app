@@ -63,7 +63,7 @@ const SuccessPage: React.FC<SuccessPageProps> = ({ onNavigate }) => {
         };
 
         processPaymentSuccess();
-    }, []);
+    }, [upsertSubscription]);
 
     if (isProcessing) {
         return (
@@ -156,7 +156,7 @@ const SuccessPage: React.FC<SuccessPageProps> = ({ onNavigate }) => {
                     )}
 
                     <div className="space-y-3">
-                        <h3 className="font-semibold text-foreground">What's Next?</h3>
+                        <h3 className="font-semibold text-foreground">What&apos;s Next?</h3>
                         <ul className="space-y-2 text-sm text-muted-foreground">
                             <li className="flex items-start">
                                 <CheckCircleIcon className="h-4 w-4 text-green-600 mr-2 mt-0.5 flex-shrink-0" />

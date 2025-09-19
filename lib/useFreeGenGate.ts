@@ -30,7 +30,7 @@ export interface FreeGenGate {
 }
 
 export const useFreeGenGate = (): FreeGenGate => {
-  const [proModal, setProModal] = useState(false);
+  useState(false);
   const limit = useMemo(readLimit, []);
   const count = readCount();
   const remaining = Math.max(0, limit - count);
