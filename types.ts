@@ -65,9 +65,9 @@ export interface SpeechRecognition extends EventTarget {
     continuous: boolean;
     interimResults: boolean;
     lang: string;
-    onresult: ((this: SpeechRecognition, ev: SpeechRecognitionEvent) => any) | null;
-    onerror: ((this: SpeechRecognition, ev: SpeechRecognitionErrorEvent) => any) | null;
-    onend: ((this: SpeechRecognition, ev: Event) => any) | null;
+    onresult: ((this: SpeechRecognition, ev: SpeechRecognitionEvent) => void) | null;
+    onerror: ((this: SpeechRecognition, ev: SpeechRecognitionErrorEvent) => void) | null;
+    onend: ((this: SpeechRecognition, ev: Event) => void) | null;
     start(): void;
     stop(): void;
 }
@@ -82,3 +82,11 @@ declare global {
 }
 
 // Better Auth types are automatically inferred
+
+export interface DashboardProps {
+    selectedMeetingId: string | null;
+    onSavingStatusChange: (status: { isAutoSaving: boolean; hasUnsavedChanges: boolean; currentSummary: MeetingSummary; } | undefined) => void;
+    currentSummary: MeetingSummary | null;
+    setCurrentSummary: (summary: MeetingSummary | null) => void;
+    onNavigate: (view: 'dashboard' | 'allMeetings' | 'pricing' | 'success' | 'profile' | 'settings') => void;
+};

@@ -28,7 +28,7 @@ const UserAvatar: React.FC<UserAvatarProps> = ({ size = 'md', onProfileClick, on
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" className={`relative rounded-full ${getSizeClasses()}`}>
+        <Button variant="ghost" className={`relative rounded-full ${getSizeClasses()}`} aria-label="Open user menu">
           <Avatar className={getSizeClasses()}>
             <AvatarImage src={String(user?.image || '')} alt={String(user?.name || '')} />
             <AvatarFallback>{String(user?.name || 'U').charAt(0)}</AvatarFallback>
@@ -48,7 +48,7 @@ const UserAvatar: React.FC<UserAvatarProps> = ({ size = 'md', onProfileClick, on
         <DropdownMenuItem onClick={onProfileClick}>Profile</DropdownMenuItem>
         <DropdownMenuItem onClick={onSettingsClick}>Settings</DropdownMenuItem>
         <DropdownMenuSeparator />
-         <DropdownMenuItem onClick={() => authClient.signOut({ callbackUrl: '/' })}>Log out</DropdownMenuItem>
+         <DropdownMenuItem onClick={() => authClient.signOut()}>Log out</DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
   );

@@ -2,7 +2,20 @@
 import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
 
-const PLAN_LIMITS: { [key: string]: any } = {
+interface PlanLimits {
+    meetings_limit: number;
+    can_save: boolean;
+    can_export: boolean;
+    can_share: boolean;
+    has_autosave: boolean;
+    has_audio_transcription: boolean;
+    session_generation_limit: number;
+    has_priority_support: boolean;
+    has_custom_templates: boolean;
+    has_api_access: boolean;
+}
+
+const PLAN_LIMITS: { [key: string]: PlanLimits } = {
     free: {
         meetings_limit: 1,
         can_save: false,

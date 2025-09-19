@@ -30,7 +30,7 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
   const [actualTheme, setActualTheme] = useState<'light' | 'dark'>('light');
   const { isAuthenticated, isLoading: authLoading } = useConvexAuth();
   const profile = useGetUserProfile();
-  const updateUserProfile = useUpdateUserProfile();
+  useUpdateUserProfile();
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {

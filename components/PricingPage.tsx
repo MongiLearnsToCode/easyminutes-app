@@ -8,7 +8,7 @@ import { USER_MESSAGES } from '../constants/userMessages';
 
 const PricingPage: React.FC = () => {
   const [plans, setPlans] = useState<{ [key: string]: PlanLimits }>({});
-  const [currentPlan, setCurrentPlan] = useState('trial');
+  const [currentPlan] = useState('trial');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const user = useQuery(api.users.getCurrentUser);

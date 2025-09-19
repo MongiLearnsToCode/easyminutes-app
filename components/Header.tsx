@@ -5,6 +5,7 @@ import { LogoIcon, SpinnerIcon, CheckCircleIcon } from '../constants';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { authClient } from '@/lib/auth-client';
+import { MeetingSummary } from '../types';
 
 interface HeaderProps {
     currentView: 'dashboard' | 'allMeetings' | 'pricing' | 'profile' | 'settings' | 'success';
@@ -12,13 +13,13 @@ interface HeaderProps {
     savingStatus?: {
         isAutoSaving: boolean;
         hasUnsavedChanges: boolean;
-        currentSummary: any;
+        currentSummary: MeetingSummary;
     };
 }
 
 const Header: React.FC<HeaderProps> = ({ currentView, onNavigate, savingStatus }) => {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
-    const { theme, setTheme, actualTheme } = useTheme();
+    useTheme();
     const { data: session } = authClient.useSession();
     const isAuthenticated = !!session;
 
@@ -156,7 +157,7 @@ const Header: React.FC<HeaderProps> = ({ currentView, onNavigate, savingStatus }
                                             <Button
                                                 variant="outline"
                                                 size="lg"
-                                                onClick={() => authClient.signOut({ callbackUrl: '/' })}
+                                                onClick={() => authClient.signOut()}
                                                 className="w-full"
                                             >
                                                 Logout

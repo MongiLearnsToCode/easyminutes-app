@@ -1,20 +1,12 @@
 
-import { Polar } from '@polar-sh/sdk';
-
-const apiKey = process.env.POLAR_ACCESS_TOKEN;
-
-const polar = new Polar({
-    accessToken: apiKey,
-});
-
 class PolarService {
-    async createCheckoutUrl(variantId: string, email: string, successUrl: string) {
+    async createCheckoutUrl() {
         // This is a placeholder for a real implementation.
         // In a real app, you would use the Polar SDK to create a checkout session.
         return 'https://polar.sh';
     }
 
-    async getCheckoutSession(checkoutId: string) {
+    async getCheckoutSession() {
         // This is a placeholder for a real implementation.
         // In a real app, you would use the Polar SDK to get a checkout session.
         return null;

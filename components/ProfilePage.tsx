@@ -5,9 +5,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Separator } from '@/components/ui/separator';
-import { Badge } from '@/components/ui/badge';
-import { Loader2, Upload, X, Save, ArrowLeft, User, Mail, Calendar, Palette } from 'lucide-react';
+import { Loader2, Save, ArrowLeft, User, Palette } from 'lucide-react';
 import { useGetUserProfile, useUpdateUserProfile } from '../services/profileService';
 import { useTheme } from '../contexts/ThemeContext';
 import { Switch } from '@/components/ui/switch';
@@ -24,7 +22,7 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ onBack }) => {
         email: '',
         image: '',
     });
-    const [avatarFile, setAvatarFile] = useState<File | null>(null);
+    const [, setAvatarFile] = useState<File | null>(null);
     const [avatarPreview, setAvatarPreview] = useState<string>('');
     const [isLoading, setIsLoading] = useState(true);
     const [isSaving, setIsSaving] = useState(false);

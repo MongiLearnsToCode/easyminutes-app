@@ -9,15 +9,16 @@ import PricingPage from '../components/PricingPage';
 import ProfilePage from '../components/ProfilePage';
 import { ToastProvider } from '../components/ui/toast';
 import { ThemeProvider } from '../contexts/ThemeContext';
+import { MeetingSummary } from '../types';
 
 export default function AppClient() {
     const [view, setView] = useState<'dashboard' | 'allMeetings' | 'pricing' | 'profile' | 'settings'>('dashboard');
     const [selectedMeetingId, setSelectedMeetingId] = useState<string | null>(null);
-    const [currentSummary, setCurrentSummary] = useState<any | null>(null);
+    const [currentSummary, setCurrentSummary] = useState<MeetingSummary | null>(null);
     const [savingStatus, setSavingStatus] = useState<{
         isAutoSaving: boolean;
         hasUnsavedChanges: boolean;
-        currentSummary: any;
+        currentSummary: MeetingSummary;
     } | undefined>(undefined);
 
     const handleNavigate = (targetView: 'dashboard' | 'allMeetings' | 'pricing' | 'profile' | 'settings') => {
@@ -27,8 +28,8 @@ export default function AppClient() {
 
     useEffect(() => {
         const handler = () => setView('pricing');
-        window.addEventListener('navigate-pricing' as any, handler);
-        return () => window.removeEventListener('navigate-pricing' as any, handler);
+        window.addEventListener('navigate-pricing', handler);
+        return () => window.removeEventListener('navigate-pricing', handler);
     }, []);
 
     useEffect(() => {

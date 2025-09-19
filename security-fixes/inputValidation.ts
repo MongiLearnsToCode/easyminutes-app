@@ -63,30 +63,32 @@ export class InputValidator {
   }
   
   // Meeting summary validation
-  static validateMeetingSummary(summary: any): void {
+  static validateMeetingSummary(summary: unknown): void {
     if (!summary || typeof summary !== 'object') {
       throw new Error('Invalid summary format');
     }
+
+    const summaryObj = summary as Record<string, unknown>;
     
     // Validate required fields
     const requiredFields = ['title', 'attendees', 'summary', 'keyPoints', 'actionItems', 'decisions'];
     
     for (const field of requiredFields) {
-      if (!(field in summary)) {
+      if (!(field in summaryObj)) {
         throw new Error(`Missing required field: ${field}`);
       }
     }
     
     // Validate and sanitize string fields
-    summary.title = this.validateText(summary.title, 200);
-    summary.summary = this.validateText(summary.summary, 5000);
+    summaryObj.title = this.validateText(summaryObj.title as string, 200);
+    summaryObj.summary = this.validateText(summaryObj.summary as string, 5000);
     
     // Validate arrays
-    if (!Array.isArray(summary.attendees)) {
+    if (!Array.isArray(summaryObj.attendees)) {
       throw new Error('Attendees must be an array');
     }
     
-    summary.attendees = summary.attendees.map((attendee: any) => {
+    summaryObj.attendees = (summaryObj.attendees as unknown[]).map((attendee: unknown) => {
       if (typeof attendee !== 'string') {
         throw new Error('Attendee names must be strings');
       }
@@ -94,11 +96,11 @@ export class InputValidator {
     });
     
     // Validate key points
-    if (!Array.isArray(summary.keyPoints)) {
+    if (!Array.isArray(summaryObj.keyPoints)) {
       throw new Error('Key points must be an array');
     }
     
-    summary.keyPoints = summary.keyPoints.map((point: any) => {
+    summaryObj.keyPoints = (summaryObj.keyPoints as unknown[]).map((point: unknown) => {
       if (typeof point !== 'string') {
         throw new Error('Key points must be strings');
       }
@@ -106,11 +108,11 @@ export class InputValidator {
     });
     
     // Validate decisions
-    if (!Array.isArray(summary.decisions)) {
+    if (!Array.isArray(summaryObj.decisions)) {
       throw new Error('Decisions must be an array');
     }
     
-    summary.decisions = summary.decisions.map((decision: any) => {
+    summaryObj.decisions = (summaryObj.decisions as unknown[]).map((decision: unknown) => {
       if (typeof decision !== 'string') {
         throw new Error('Decisions must be strings');
       }
@@ -118,22 +120,23 @@ export class InputValidator {
     });
     
     // Validate action items
-    if (!Array.isArray(summary.actionItems)) {
+    if (!Array.isArray(summaryObj.actionItems)) {
       throw new Error('Action items must be an array');
     }
     
-    summary.actionItems = summary.actionItems.map((item: any) => {
+    summaryObj.actionItems = (summaryObj.actionItems as unknown[]).map((item: unknown) => {
       if (!item || typeof item !== 'object') {
         throw new Error('Action items must be objects');
       }
       
-      if (typeof item.task !== 'string' || typeof item.owner !== 'string') {
+      const actionItem = item as { task: unknown; owner: unknown };
+      if (typeof actionItem.task !== 'string' || typeof actionItem.owner !== 'string') {
         throw new Error('Action item task and owner must be strings');
       }
       
       return {
-        task: this.validateText(item.task, 300),
-        owner: this.validateText(item.owner, 100)
+        task: this.validateText(actionItem.task, 300),
+        owner: this.validateText(actionItem.owner, 100)
       };
     });
   }
