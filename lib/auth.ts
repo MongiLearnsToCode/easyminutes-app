@@ -1,14 +1,24 @@
 import { betterAuth } from "better-auth";
-import Database from "better-sqlite3";
-import path from "path";
+import { convexAdapter } from "@convex-dev/better-auth";
 
-const dbPath = path.join(process.cwd(), "auth.db");
-const db = new Database(dbPath);
-
+// Initialize the Convex adapter
+// Note: You'll need to configure your Convex client
+// For now, we'll use a basic setup that you can customize
 export const auth = betterAuth({
-  database: db,
-  baseURL: process.env.BETTER_AUTH_URL || "https://easyminutes-app.vercel.app",
+  database: convexAdapter(),
   emailAndPassword: {
     enabled: true,
   },
+  socialProviders: {
+    // You can add social providers here as needed
+    // google: {
+    //   clientId: process.env.GOOGLE_CLIENT_ID || "",
+    //   clientSecret: process.env.GOOGLE_CLIENT_SECRET || "",
+    // },
+    // github: {
+    //   clientId: process.env.GITHUB_CLIENT_ID || "",
+    //   clientSecret: process.env.GITHUB_CLIENT_SECRET || "",
+    // },
+  },
+  // Add other configuration options as needed
 });

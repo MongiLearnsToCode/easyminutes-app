@@ -11,6 +11,7 @@
   },
   "dependencies": {
     "@convex-dev/auth": "^0.0.89",
+    "@convex-dev/better-auth": "^0.8.4",
     "@google/genai": "^1.11.0",
     "@hookform/resolvers": "^5.2.1",
     "@polar-sh/nextjs": "^0.4.6",
@@ -28,8 +29,7 @@
     "@tailwindcss/postcss": "^4.1.13",
     "@types/dompurify": "^3.2.0",
     "autoprefixer": "^10.4.21",
-    "better-auth": "^1.3.11",
-    "better-sqlite3": "^12.2.0",
+    "better-auth": "^1.3.12",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "convex": "^1.27.0",
@@ -50,7 +50,6 @@
     "zod": "^4.0.14"
   },
   "devDependencies": {
-    "@types/better-sqlite3": "^7.6.13",
     "@types/node": "^22.14.0",
     "@types/react": "19.1.13",
     "eslint": "^9.35.0",
