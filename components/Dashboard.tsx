@@ -1,32 +1,26 @@
 import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
-import { MeetingSummary, ActionItem, SpeechRecognition, SpeechRecognitionEvent, SpeechRecognitionErrorEvent } from '../types';
+import { MeetingSummary, ActionItem, SpeechRecognition, SpeechRecognitionEvent, SpeechRecognitionErrorEvent, DashboardProps } from '../types';
 
 import { useQuery, useMutation } from 'convex/react';
 import { api } from '../convex/_generated/api';
-import { MicIcon, TextIcon, SpinnerIcon, CheckCircleIcon, TrashIcon, PlusIcon, UploadIcon, FileTextIcon, FileAudioIcon, ArrowUpTrayIcon, DocumentDuplicateIcon, MailIcon, EditIcon } from '../constants';
-import { Packer, Document, Paragraph, TextRun, HeadingLevel, AlignmentType, Table, TableRow, TableCell, WidthType, BorderStyle } from 'docx';
-import saveAs from 'file-saver';
-import jsPDF from 'jspdf';
-import autoTable from 'jspdf-autotable';
+import { MicIcon, TextIcon, SpinnerIcon, CheckCircleIcon, TrashIcon, PlusIcon, UploadIcon, FileTextIcon, ArrowUpTrayIcon, DocumentDuplicateIcon, MailIcon } from '../constants';
 import * as mammoth from 'mammoth';
 import DOMPurify from 'dompurify';
-import { InputValidator } from '../security-fixes/inputValidation';
 import { SecureFileUpload } from '../security-fixes/secureFileUpload';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Skeleton } from '@/components/ui/skeleton';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { ConfirmationDialog } from './ConfirmationDialog';
 import { AttendeeAvatar } from './AttendeeAvatar';
 import { EmptyState } from './EmptyState';
 import { Id } from '../convex/_generated/dataModel';
 // import ProPrompt from './ProPrompt';
 import { useToast } from '@/components/ui/toast';
-import { USER_MESSAGES } from '../constants/userMessages';
 import { useFreeGenGate, gateAndGenerate } from '../lib/useFreeGenGate';
 import BlockingProModal from './BlockingProModal';
 // import BlockingProModal from './BlockingProModal';
@@ -203,7 +197,7 @@ className="ml-2 text-xs font-bold text-foreground bg-primary/10 px-2 py-1 rounde
     );
 };
 
-const Dashboard: React.FC<{ selectedMeetingId: string | null; onSavingStatusChange: (status: { isAutoSaving: boolean; hasUnsavedChanges: boolean; currentSummary: any; } | undefined) => void; currentSummary: any | null; setCurrentSummary: (summary: any | null) => void; onNavigate: (view: 'dashboard' | 'allMeetings' | 'pricing' | 'success' | 'profile' | 'settings') => void; }> = ({ selectedMeetingId, onSavingStatusChange, currentSummary, setCurrentSummary, onNavigate }) => {
+const Dashboard: React.FC<DashboardProps> = ({ selectedMeetingId, onSavingStatusChange, currentSummary, setCurrentSummary, onNavigate }) => {
     const toast = useToast();
     const [activeTab, setActiveTab] = useState<ActiveTab>('text');
     const [inputText, setInputText] = useState('');
@@ -232,7 +226,7 @@ const Dashboard: React.FC<{ selectedMeetingId: string | null; onSavingStatusChan
     const { canGenerate, remaining, increment, requirePro } = useFreeGenGate();
     const [showProModal, setShowProModal] = useState(false);
     const [lastProPromptTime, setLastProPromptTime] = useState(0);
-    const openProModal = () => setShowProModal(true);
+    const openProModal = useCallback(() => setShowProModal(true), []);
     // const [isTrial, setIsTrial] = useState(false);
     
     const recognitionRef = useRef<SpeechRecognition | null>(null);
@@ -301,7 +295,7 @@ const Dashboard: React.FC<{ selectedMeetingId: string | null; onSavingStatusChan
             toast.success('Copied to clipboard!', 'Meeting minutes have been copied to your clipboard.');
             setCopyStatusText('Copied!');
             setTimeout(() => {
-                setCopyStatusText('Copy to Clipboard');
+            setCopyStatusText('Copy to Clipboard');
             }, 1500);
         }).catch(err => {
             console.error('Failed to copy text: ', err);
@@ -311,161 +305,7 @@ const Dashboard: React.FC<{ selectedMeetingId: string | null; onSavingStatusChan
                 setCopyStatusText('Copy to Clipboard');
             }, 2000);
         });
-    }, [toast]);
-
-    const handleShareByEmail = useCallback((summary: MeetingSummary) => {
-        toast.info('Email sharing is not available in this build.');
-    }, [toast]);
-
-    const handleExportDocx = useCallback((summary: MeetingSummary) => {
-        toast.info('DOCX export is not available in this build.');
-    }, [toast]);
-
-    const realHandleExportDocx = useCallback((summary: MeetingSummary) => {
-        if (!summary) return;
-        const doc = new Document({
-            creator: "Easy Minutes",
-            title: summary.title,
-            description: "Meeting Minutes",
-            sections: [{
-                children: [
-                    new Paragraph({ text: summary.title, heading: HeadingLevel.TITLE, alignment: AlignmentType.CENTER, spacing: { after: 200 } }),
-                    new Paragraph({ text: `Date: ${new Date(summary.createdAt).toLocaleDateString()}`, alignment: AlignmentType.CENTER, spacing: { after: 200 } }),
-                    new Paragraph({ text: "Summary", heading: HeadingLevel.HEADING_2, border: { bottom: { style: BorderStyle.SINGLE, size: 6, color: "auto"}}, spacing: { after: 100 } }),
-                    new Paragraph({ children: summary.summary.split('\n').map(line => new TextRun(line)), spacing: { after: 200 } }),
-    
-                    new Paragraph({ text: "Attendees", heading: HeadingLevel.HEADING_2, border: { bottom: { style: BorderStyle.SINGLE, size: 6, color: "auto"}}, spacing: { after: 100 } }),
-                    ...summary.attendees.map(attendee => new Paragraph({ text: attendee, bullet: { level: 0 }, indent: { left: 720, hanging: 360 } })),
-                    new Paragraph({ text: "", spacing: { after: 200 } }),
-    
-                    new Paragraph({ text: "Key Points", heading: HeadingLevel.HEADING_2, border: { bottom: { style: BorderStyle.SINGLE, size: 6, color: "auto"}}, spacing: { after: 100 } }),
-                    ...summary.keyPoints.map(point => new Paragraph({ text: point, bullet: { level: 0 }, indent: { left: 720, hanging: 360 } })),
-                    new Paragraph({ text: "", spacing: { after: 200 } }),
-    
-                    ...(summary.decisions.length > 0 ? [
-                        new Paragraph({ text: "Decisions Made", heading: HeadingLevel.HEADING_2, border: { bottom: { style: BorderStyle.SINGLE, size: 6, color: "auto"}}, spacing: { after: 100 } }),
-                        ...summary.decisions.map(decision => new Paragraph({ text: decision, bullet: { level: 0 }, indent: { left: 720, hanging: 360 } })),
-                        new Paragraph({ text: "", spacing: { after: 200 } }),
-                    ] : []),
-    
-                    new Paragraph({ text: "Action Items", heading: HeadingLevel.HEADING_2, border: { bottom: { style: BorderStyle.SINGLE, size: 6, color: "auto"}}, spacing: { after: 100 } }),
-                    new Table({
-                        width: { size: 100, type: WidthType.PERCENTAGE },
-                        rows: [
-                            new TableRow({
-                                children: [
-                                    new TableCell({ width: {size: 70, type: WidthType.PERCENTAGE}, children: [new Paragraph({text: "Task", spacing: {before:120, after:120}})], borders: {bottom: {style: BorderStyle.SINGLE, size: 4}}}),
-                                    new TableCell({ width: {size: 30, type: WidthType.PERCENTAGE}, children: [new Paragraph({text: "Assigned", spacing: {before:120, after:120}})], borders: {bottom: {style: BorderStyle.SINGLE, size: 4}}}),
-                                ],
-                            }),
-                            ...summary.actionItems.map(item => new TableRow({
-                                children: [
-                                    new TableCell({ children: [new Paragraph(item.task)] }),
-                                    new TableCell({ children: [new Paragraph(item.owner)] }),
-                                ]
-                            })),
-                        ],
-                    }),
-                ],
-            }],
-        });
-        Packer.toBlob(doc).then(blob => {
-            saveAs(blob, `${summary.title.replace(/[^a-z0-9]/gi, '_').toLowerCase()}_minutes.docx`);
-            toast.success('Document exported!', 'Your meeting minutes have been downloaded as a Word document.');
-        }).catch(err => {
-            console.error('Failed to export DOCX:', err);
-            toast.error('Export failed', 'Unable to export as Word document. Please try again.');
-        });
-    }, []);
-
-    const handleExportPdf = useCallback((summary: MeetingSummary) => {
-        toast.info('PDF export is not available in this build.');
-    }, [toast]);
-
-    const realHandleExportPdf = useCallback((summary: MeetingSummary) => {
-        if (!summary) return;
-        const doc = new jsPDF();
-        const pageWidth = doc.internal.pageSize.getWidth();
-        const margin = 15;
-        let yPos = 20;
-
-        doc.setFont("helvetica", "bold");
-        doc.setFontSize(22);
-        doc.text(summary.title, pageWidth / 2, yPos, { align: "center" });
-        yPos += 10;
-        doc.setFont("helvetica", "normal");
-        doc.setFontSize(10);
-                    doc.text(new Date(summary.createdAt).toLocaleString(), pageWidth / 2, yPos, { align: "center" });
-        yPos += 10;
-        
-        const addSection = (title: string, content: string[] | string) => {
-            if (!content || (Array.isArray(content) && content.length === 0)) return;
-            doc.setFont("helvetica", "bold");
-            doc.setFontSize(14);
-            doc.text(title, margin, yPos);
-            yPos += 6;
-            doc.setLineWidth(0.5);
-            doc.line(margin, yPos, pageWidth - margin, yPos);
-            yPos += 8;
-            
-            doc.setFont("helvetica", "normal");
-            doc.setFontSize(11);
-            
-            const listContent = (item: string) => {
-                const lines = doc.splitTextToSize(`•  ${item}`, pageWidth - (margin * 2) - 5);
-                if (yPos + (lines.length * 5) > doc.internal.pageSize.getHeight() - margin) {
-                    doc.addPage();
-                    yPos = margin;
-                }
-                doc.text(lines, margin + 5, yPos);
-                yPos += (lines.length * 5) + 3;
-            };
-
-            if (Array.isArray(content)) {
-                content.forEach(listContent);
-            } else {
-                const lines = doc.splitTextToSize(content, pageWidth - (margin * 2));
-                 if (yPos + (lines.length * 5) > doc.internal.pageSize.getHeight() - margin) {
-                    doc.addPage();
-                    yPos = margin;
-                }
-                doc.text(lines, margin, yPos);
-                yPos += (lines.length * 5) + 3;
-            }
-            yPos += 5;
-        };
-        
-        addSection("Summary", summary.summary);
-        addSection("Attendees", summary.attendees);
-        addSection("Key Points", summary.keyPoints);
-        addSection("Decisions Made", summary.decisions);
-
-        if (summary.actionItems.length > 0) {
-            yPos += 5;
-            if (yPos > doc.internal.pageSize.getHeight() - 40) { // Check space for header
-                doc.addPage();
-                yPos = margin;
-            }
-            doc.setFont("helvetica", "bold");
-            doc.setFontSize(14);
-            doc.text("Action Items", margin, yPos);
-            yPos += 6;
-            doc.setLineWidth(0.5);
-            doc.line(margin, yPos, pageWidth - margin, yPos);
-            
-            autoTable(doc, {
-                startY: yPos + 2,
-                head: [['Task', 'Assigned']],
-                body: summary.actionItems.map(item => [item.task, item.owner]),
-                theme: 'striped',
-                headStyles: { fillColor: [42, 86, 153] },
-                margin: { left: margin, right: margin },
-            });
-        }
-        
-        doc.save(`${summary.title.replace(/[^a-z0-9]/gi, '_').toLowerCase()}_minutes.pdf`);
-        toast.success('PDF exported!', 'Your meeting minutes have been downloaded as a PDF document.');
-    }, []);
+    }, [toast, setCopyStatusText]);
 
     useEffect(() => {
         const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -549,7 +389,7 @@ const Dashboard: React.FC<{ selectedMeetingId: string | null; onSavingStatusChan
                 setIsProcessingFile(false);
                 toast.error('Unsupported file type', `${type || 'Unknown'} files are not supported. Please upload TXT, DOCX, MP3, WAV, or M4A files.`);
             }
-        } catch (e) {
+        } catch {
             setError("An error occurred while processing the file.");
             setUploadedFile(null);
             setIsProcessingFile(false);
@@ -574,7 +414,7 @@ const Dashboard: React.FC<{ selectedMeetingId: string | null; onSavingStatusChan
 
     const handleGenerate = useCallback(async () => {
         const result = await gateAndGenerate({ canGenerate, remaining, increment, requirePro, openProModal }, async () => {
-            let inputToSummarize: string | null = inputText.trim(); // Default to text input only
+            const inputToSummarize: string | null = inputText.trim(); // Default to text input only
             if (!inputToSummarize) {
                 setError("Please provide some text to summarize.");
                 return null;
@@ -617,7 +457,7 @@ const Dashboard: React.FC<{ selectedMeetingId: string | null; onSavingStatusChan
                     setCurrentSummary(savedSummary);
                     setOriginalSummaryForDiff(savedSummary);
                     toast.success('Meeting minutes generated and saved!', 'Your AI-powered meeting summary is ready for review and has been saved.');
-                } catch (saveError) {
+                } catch {
                     // If save fails (user not authenticated), keep the local version
                     console.log('Unable to save meeting - user may not be authenticated');
                     if (remaining === 1) {
@@ -636,12 +476,12 @@ const Dashboard: React.FC<{ selectedMeetingId: string | null; onSavingStatusChan
                 setIsLoading(false);
             }
         });
-    }, [inputText, savedMinutes, requirePro, openProModal, increment, remaining, canGenerate]);
+    }, [canGenerate, remaining, increment, requirePro, openProModal, inputText, setError, setCurrentSummary, setOriginalSummaryForDiff, addMinute, toast, setIsLoading]);
     
     const handleSelectMinute = useCallback((minute: MeetingSummary) => {
         setCurrentSummary(minute);
         setOriginalSummaryForDiff(minute);
-    }, []);
+    }, [setCurrentSummary, setOriginalSummaryForDiff]);
 
     const subscription = useGetSubscription();
 
@@ -689,7 +529,7 @@ const Dashboard: React.FC<{ selectedMeetingId: string | null; onSavingStatusChan
         return () => {
             clearTimeout(handler);
         };
-    }, [currentSummary, hasUnsavedChanges, toast, subscription]);
+    }, [currentSummary, hasUnsavedChanges, toast, subscription, lastProPromptTime, onNavigate, setCurrentSummary, updateMinute, setLastProPromptTime, setOriginalSummaryForDiff, setError, setIsAutoSaving]);
     
     // Pass saving status to parent
     useEffect(() => {
@@ -735,7 +575,7 @@ const Dashboard: React.FC<{ selectedMeetingId: string | null; onSavingStatusChan
         } finally {
             setIsDeleting(false);
         }
-    }, [deleteConfirmation.meetingId, deleteConfirmation.meetingTitle, currentSummary, toast]);
+    }, [deleteConfirmation.meetingId, deleteConfirmation.meetingTitle, currentSummary, toast, deleteMinute, setCurrentSummary, setOriginalSummaryForDiff, setDeleteConfirmation, setError, setIsDeleting]);
 
     const handleDeleteCancel = useCallback(() => {
         setDeleteConfirmation({ isOpen: false, meetingId: null, meetingTitle: '' });
@@ -749,16 +589,6 @@ const Dashboard: React.FC<{ selectedMeetingId: string | null; onSavingStatusChan
         setIsDragging(false);
         if (e.dataTransfer.files?.length) setUploadedFile(e.dataTransfer.files[0]);
     };
-
-
-
-    const tabClasses = (tabName: ActiveTab) =>
-        `flex items-center space-x-2 px-4 py-2 rounded-lg font-medium transition-colors duration-200 cursor-pointer w-1/3 justify-center ${ 
-            activeTab === tabName
-                ? 'bg-brand-primary text-white shadow-md'
-                : 'text-brand-muted hover:bg-gray-200'
-        }`;
-        
 
     return (
         <main className="h-full w-full max-w-[1600px] mx-auto px-4 sm:px-6 md:px-8 lg:px-12 py-6">

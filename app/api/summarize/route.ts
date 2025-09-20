@@ -75,7 +75,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Input is required' }, { status: 400 });
     }
 
-    let contents: any;
+    let contents: string | { parts: ({ inlineData: { mimeType: string; data: string; }; } | { text: string; })[]; };
 
     if (type === 'text') {
       contents = `Based on the following meeting notes or transcription, please generate a structured summary.

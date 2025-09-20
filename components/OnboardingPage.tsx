@@ -4,8 +4,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Loader2, Upload, X } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 import { LogoIcon } from '../constants';
 import { useCreateUser } from '../services/profileService';
 import { useQuery } from 'convex/react';
@@ -82,15 +81,6 @@ const OnboardingPage: React.FC<OnboardingPageProps> = ({ onComplete }) => {
         }
     };
 
-    const getInitials = (name: string) => {
-        return name
-            .split(' ')
-            .map(n => n[0])
-            .join('')
-            .toUpperCase()
-            .slice(0, 2);
-    };
-
     return (
         <div className="min-h-screen bg-background flex items-center justify-center p-4">
             <Card className="w-full max-w-md mx-auto shadow-2xl">
@@ -102,7 +92,7 @@ const OnboardingPage: React.FC<OnboardingPageProps> = ({ onComplete }) => {
                         Welcome to Easy Minutes
                     </CardTitle>
                     <p className="text-muted-foreground">
-                        Let's set up your profile to get started
+                        Let&apos;s set up your profile to get started
                     </p>
                 </CardHeader>
                 

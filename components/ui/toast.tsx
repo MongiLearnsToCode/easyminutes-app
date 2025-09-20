@@ -82,7 +82,7 @@ const ToastItem: React.FC<{
             }, toast.duration);
             return () => clearTimeout(timer);
         }
-    }, [toast.duration]);
+    }, [toast.duration, handleRemove]);
 
     const handleRemove = useCallback(() => {
         setIsRemoving(true);

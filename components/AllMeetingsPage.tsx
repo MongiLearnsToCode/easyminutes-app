@@ -1,15 +1,10 @@
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import React, { useState, useMemo } from 'react';
 import { MeetingSummary } from '../types';
 import { useQuery, useMutation } from 'convex/react';
 import { api } from '../convex/_generated/api';
 import { SearchIcon, TrashIcon, ArrowLeftIcon, HistoryIcon, FileTextIcon, ViewGridIcon, ViewListIcon, ViewCalendarIcon, EditIcon } from '../constants';
-import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Input } from '@/components/ui/input';
 import { ConfirmationDialog } from './ConfirmationDialog';
 import { AttendeeAvatar } from './AttendeeAvatar';
-import { MeetingCardSkeleton } from './MeetingCardSkeleton';
 import MeetingCalendarView from './MeetingCalendarView';
 import { EmptyState } from './EmptyState';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
@@ -95,13 +90,14 @@ const AllMeetingsPage: React.FC<{
     onSelectMeeting: (id: string) => void;
     onBack: () => void;
 }> = ({ onSelectMeeting, onBack }) => {
-    const meetings = useQuery(api.minutes.getAllMinutes)?.map(m => ({...m, id: m._id, createdAt: m._creationTime})) || [];
+    const rawMeetings = useQuery(api.minutes.getAllMinutes);
+    const meetings = useMemo(() => rawMeetings?.map(m => ({...m, id: m._id, createdAt: m._creationTime})) || [], [rawMeetings]);
     const deleteMinute = useMutation(api.minutes.deleteMinute);
     const [searchTerm, setSearchTerm] = useState('');
     const [error, setError] = useState<string | null>(null);
     const [layout, setLayout] = useState<Layout>('list');
     const [sortOption, setSortOption] = useState<SortOption>('date-desc');
-    const [loading, setLoading] = useState(false);
+    const [loading] = useState(false);
     const [deleteConfirmation, setDeleteConfirmation] = useState<{ isOpen: boolean; meetingId: string | null; meetingTitle: string }>({ isOpen: false, meetingId: null, meetingTitle: '' });
     const [isDeleting, setIsDeleting] = useState(false);
 

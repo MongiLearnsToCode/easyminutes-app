@@ -1,4 +1,3 @@
-import { InputValidator } from './inputValidation';
 import { USER_MESSAGES } from '../constants/userMessages';
 
 // Secure file upload utilities
@@ -68,7 +67,7 @@ return {
       
       return { isValid: true };
       
-    } catch (error) {
+    } catch {
       return { isValid: false, error: 'File validation error' };
     }
   }
@@ -177,7 +176,7 @@ return {
       
       return { isSafe: true };
       
-    } catch (error) {
+    } catch {
       return { isSafe: false, reason: 'Scan failed' };
     }
   }
