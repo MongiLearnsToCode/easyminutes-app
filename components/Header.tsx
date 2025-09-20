@@ -1,5 +1,6 @@
 import React from 'react';
 import { LogoIcon } from '../constants';
+import { MeetingSummary } from '../types';
 
 interface HeaderProps {
     currentView: 'dashboard' | 'allMeetings' | 'pricing' | 'profile' | 'settings' | 'success';
@@ -7,10 +8,11 @@ interface HeaderProps {
     savingStatus?: {
         isAutoSaving: boolean;
         hasUnsavedChanges: boolean;
-        currentSummary: any;
+        currentSummary: MeetingSummary;
     };
 }
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const Header: React.FC<HeaderProps> = ({ currentView, onNavigate, savingStatus }) => {
     return (
         <header className="bg-background/80 backdrop-blur-sm sticky top-0 z-20 border-b border-border">

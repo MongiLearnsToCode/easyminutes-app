@@ -28,11 +28,7 @@ const mockUseSession = authClient.useSession as jest.Mock;
 describe('Header', () => {
   const mockOnNavigate = jest.fn();
 
-  const savingStatusUnsaved: HeaderProps['savingStatus'] = {
-    isAutoSaving: false,
-    hasUnsavedChanges: true,
-    currentSummary: { id: '1' } as MeetingSummary,
-  };
+
   const savingStatusSaving: HeaderProps['savingStatus'] = {
     isAutoSaving: true,
     hasUnsavedChanges: true,

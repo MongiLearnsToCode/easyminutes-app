@@ -3,7 +3,7 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import Dashboard from './Dashboard';
 import { useQuery, useMutation } from 'convex/react';
 import * as mammoth from 'mammoth';
-import { MeetingSummary, DashboardProps } from '../types';
+import { DashboardProps } from '../types';
 
 // Mock all the dependencies
 jest.mock('convex/react');
@@ -46,14 +46,26 @@ jest.mock('../lib/useFreeGenGate', () => ({
         increment: jest.fn(),
         requirePro: jest.fn(),
     }),
-    gateAndGenerate: async (_: any, generate: () => any) => await generate(),
+    gateAndGenerate: async (_: unknown, generate: () => unknown) => await generate(),
 }));
 jest.mock('../services/subscriptionService', () => ({
     useGetSubscription: () => ({ data: { plan_type: 'pro' } }),
 }));
-jest.mock('./Waveform', () => () => <div>Waveform</div>);
-jest.mock('./ProPrompt', () => () => <div>ProPrompt</div>);
-jest.mock('./BlockingProModal', () => () => <div>BlockingProModal</div>);
+jest.mock('./Waveform', () => {
+  const Waveform = () => <div>Waveform</div>;
+  Waveform.displayName = 'Waveform';
+  return Waveform;
+});
+jest.mock('./ProPrompt', () => {
+  const ProPrompt = () => <div>ProPrompt</div>;
+  ProPrompt.displayName = 'ProPrompt';
+  return ProPrompt;
+});
+jest.mock('./BlockingProModal', () => {
+  const BlockingProModal = () => <div>BlockingProModal</div>;
+  BlockingProModal.displayName = 'BlockingProModal';
+  return BlockingProModal;
+});
 jest.mock('./ConfirmationDialog', () => ({
     ConfirmationDialog: () => <div>ConfirmationDialog</div>,
 }));
@@ -91,7 +103,7 @@ describe('Dashboard', () => {
     beforeEach(() => {
         mockUseQuery.mockReturnValue([]);
         const mockAddMinute = jest.fn().mockImplementation(summary => Promise.resolve({ ...summary, id: 'saved-id', createdAt: Date.now() }));
-        mockUseMutation.mockImplementation((mutation: any) => {
+        mockUseMutation.mockImplementation((mutation: string) => {
             if (mutation === 'minutes.addMinute') {
                 return mockAddMinute;
             }

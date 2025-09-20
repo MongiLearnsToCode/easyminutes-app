@@ -395,7 +395,7 @@ const Dashboard: React.FC<DashboardProps> = ({ selectedMeetingId, onSavingStatus
             setIsProcessingFile(false);
             toast.error('File processing error', 'An unexpected error occurred while processing the file. Please try again.');
         }
-    }, []);
+    }, [setCurrentSummary, toast]);
 
     useEffect(() => {
         if (uploadedFile) {
@@ -413,7 +413,7 @@ const Dashboard: React.FC<DashboardProps> = ({ selectedMeetingId, onSavingStatus
     
 
     const handleGenerate = useCallback(async () => {
-        const result = await gateAndGenerate({ canGenerate, remaining, increment, requirePro, openProModal }, async () => {
+        await gateAndGenerate({ canGenerate, remaining, increment, requirePro, openProModal }, async () => {
             const inputToSummarize: string | null = inputText.trim(); // Default to text input only
             if (!inputToSummarize) {
                 setError("Please provide some text to summarize.");
@@ -551,9 +551,7 @@ const Dashboard: React.FC<DashboardProps> = ({ selectedMeetingId, onSavingStatus
     }, [selectedMeetingId, savedMinutes]);
 
 
-    const handleDeleteClick = useCallback((id: string, title: string) => {
-        setDeleteConfirmation({ isOpen: true, meetingId: id, meetingTitle: title });
-    }, []);
+
 
     const handleDeleteConfirm = useCallback(async () => {
         if (!deleteConfirmation.meetingId) return;
