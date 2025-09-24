@@ -67,19 +67,11 @@ const PLAN_LIMITS: { [key: string]: any } = {
 
 export const getSubscription = query({
     handler: async (ctx) => {
-        const identity = await ctx.auth.getUserIdentity();
-        if (!identity) {
-            return null;
-        }
-
-        const userId = identity.subject;
-
         const subscription = await ctx.db
             .query("user_subscriptions")
-            .withIndex("by_userId", (q) => q.eq("userId", userId))
             .first();
 
-        return subscription;
+        return subscription || { plan_type: 'free', meetings_used: 0, meetings_limit: 1 };
     },
 });
 
@@ -103,12 +95,7 @@ export const upsertSubscription = mutation({
         meetings_limit: v.optional(v.number()),
     },
     handler: async (ctx, args) => {
-        const identity = await ctx.auth.getUserIdentity();
-        if (!identity) {
-            throw new Error("Not authenticated");
-        }
-
-        const userId = identity.subject;
+        const userId = 'demo-user';
 
         const existingSubscription = await ctx.db
             .query("user_subscriptions")

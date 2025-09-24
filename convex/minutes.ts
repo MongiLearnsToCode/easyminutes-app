@@ -2,13 +2,8 @@
 import { mutation, query } from './_generated/server';
 import { v } from 'convex/values';
 
-export const getAllMinutes = query({ 
+export const getAllMinutes = query({
     handler: async (ctx) => {
-        const identity = await ctx.auth.getUserIdentity();
-        if (!identity) {
-            throw new Error("Not authenticated");
-        }
-
         return await ctx.db.query('minutes').collect();
     }
 });
@@ -23,12 +18,7 @@ export const addMinute = mutation({
     actionItems: v.array(v.object({ task: v.string(), owner: v.string() })),
   },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
-        throw new Error("Not authenticated");
-    }
-
-    const id = await ctx.db.insert('minutes', { ...args, userId: identity.subject });
+    const id = await ctx.db.insert('minutes', { ...args, userId: 'demo-user' });
     const minute = await ctx.db.get(id);
     return { ...minute, id, createdAt: minute!._creationTime };
   },
@@ -45,21 +35,12 @@ export const updateMinute = mutation({
     actionItems: v.optional(v.array(v.object({ task: v.string(), owner: v.string() }))),
   },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
-        throw new Error("Not authenticated");
-    }
-
     const { id, ...rest } = args;
 
     const existingMinute = await ctx.db.get(id);
 
     if (!existingMinute) {
         throw new Error("Minute not found");
-    }
-
-    if (existingMinute.userId !== identity.subject) {
-        throw new Error("Not authorized");
     }
 
     await ctx.db.patch(id, rest);
@@ -71,19 +52,10 @@ export const updateMinute = mutation({
 export const deleteMinute = mutation({
   args: { id: v.id('minutes') },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
-        throw new Error("Not authenticated");
-    }
-
     const existingMinute = await ctx.db.get(args.id);
 
     if (!existingMinute) {
         throw new Error("Minute not found");
-    }
-
-    if (existingMinute.userId !== identity.subject) {
-        throw new Error("Not authorized");
     }
 
     await ctx.db.delete(args.id);
