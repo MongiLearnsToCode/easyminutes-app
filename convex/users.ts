@@ -8,7 +8,7 @@ export const getCurrentUser = query({
             .query('users')
             .first();
 
-        return user || { name: 'Demo User', email: 'demo@example.com' };
+        return user || { name: 'Demo User', email: 'demo@example.com', image: '' };
     },
 });
 
@@ -24,7 +24,7 @@ export const getUserProfile = query({
             .query('users')
             .first();
 
-        return user || { name: 'Demo User', email: 'demo@example.com' };
+        return user || { name: 'Demo User', email: 'demo@example.com', image: '' };
     },
 });
 
