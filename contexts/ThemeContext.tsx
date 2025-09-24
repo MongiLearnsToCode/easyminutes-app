@@ -1,6 +1,4 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import { useGetUserProfile, useUpdateUserProfile } from '../services/profileService';
-import { useConvexAuth } from 'convex/react';
 
 type Theme = 'light' | 'dark' | 'system';
 
@@ -28,24 +26,13 @@ interface ThemeProviderProps {
 export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
   const [theme, setTheme] = useState<Theme>('system');
   const [actualTheme, setActualTheme] = useState<'light' | 'dark'>('light');
-  const { isAuthenticated, isLoading: authLoading } = useConvexAuth();
-  const profile = useGetUserProfile();
-  const updateUserProfile = useUpdateUserProfile();
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    if (!authLoading) {
-      if (isAuthenticated && profile) {
-        // Theme preference could be stored in profile, but for now use localStorage
-        const stored = localStorage.getItem('theme') as Theme;
-        setTheme(stored || 'system');
-      } else {
-        const stored = localStorage.getItem('theme') as Theme;
-        setTheme(stored || 'system');
-      }
-      setIsLoading(false);
-    }
-  }, [authLoading, isAuthenticated, profile]);
+    const stored = localStorage.getItem('theme') as Theme;
+    setTheme(stored || 'system');
+    setIsLoading(false);
+  }, []);
 
   useEffect(() => {
     const root = window.document.documentElement;
@@ -70,17 +57,9 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
     }
   }, [theme]);
 
-  const handleSetTheme = async (newTheme: Theme) => {
+  const handleSetTheme = (newTheme: Theme) => {
     setTheme(newTheme);
     localStorage.setItem('theme', newTheme);
-    // Theme is stored in localStorage
-    // if (isAuthenticated) {
-    //   try {
-    //     await updateUserProfile({ theme_preference: newTheme });
-    //   } catch (error) {
-    //     console.error('Failed to update theme preference:', error);
-    //   }
-    // }
   };
 
   return (
