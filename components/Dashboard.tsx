@@ -91,19 +91,7 @@ const EditableMinutesDisplay: React.FC<{ summary: MeetingSummary; setSummary: Re
         updateSummary({ actionItems: summary.actionItems.filter((_, i) => i !== index) });
     };
 
-    // Only sanitize when rendering HTML content, not for input values
-    const sanitizedSummary = {
-        ...summary,
-        summary: summary.summary, // Keep raw for textarea
-        attendees: summary.attendees, // Keep raw for inputs
-        keyPoints: summary.keyPoints, // Keep raw for inputs
-        decisions: summary.decisions, // Keep raw for inputs
-        actionItems: summary.actionItems.map(item => ({
-            ...item,
-            task: item.task, // Keep raw for inputs
-            owner: item.owner, // Keep raw for inputs
-        })),
-    };
+
 
     return (
         <div className="space-y-6 text-foreground animate-fade-in">
@@ -112,7 +100,7 @@ const EditableMinutesDisplay: React.FC<{ summary: MeetingSummary; setSummary: Re
                     Summary
                 </h4>
                 <Textarea
-                    value={sanitizedSummary.summary}
+                    value={summary.summary}
                     onChange={(e) => updateSummary({ summary: e.target.value })}
                     className="bg-muted/50 border-l-4 border-primary/50 focus:border-primary/50 resize-none overflow-y-auto"
                     placeholder="Meeting summary..."
@@ -124,7 +112,7 @@ const EditableMinutesDisplay: React.FC<{ summary: MeetingSummary; setSummary: Re
             <div>
                 <SectionHeader>Attendees</SectionHeader>
                 <div className="flex flex-wrap gap-4">
-                    {sanitizedSummary.attendees.map((attendee, index) => (
+                    {summary.attendees.map((attendee, index) => (
                         <div key={index} className="flex items-center gap-2 group">
                             <AttendeeAvatar name={attendee} />
                             <input
@@ -144,12 +132,12 @@ const EditableMinutesDisplay: React.FC<{ summary: MeetingSummary; setSummary: Re
             </div>
 
             {(['keyPoints', 'decisions'] as const).map(section => {
-                if (!sanitizedSummary[section]?.length && section === 'decisions') return null;
+                if (!summary[section]?.length && section === 'decisions') return null;
                 return (
                     <div key={section}>
                         <SectionHeader>{section === 'keyPoints' ? 'Key Points' : 'Decisions Made'}</SectionHeader>
                         <ul className="space-y-3">
-                            {sanitizedSummary[section].map((item, index) => 
+                            {summary[section].map((item, index) => 
 <li key={index} className="flex items-center group text-muted-foreground/90 leading-relaxed gap-2">
 <span className="text-primary font-bold text-lg flex-shrink-0">•</span>
                                     <input
@@ -172,7 +160,7 @@ const EditableMinutesDisplay: React.FC<{ summary: MeetingSummary; setSummary: Re
             <div>
                 <SectionHeader>Action Items</SectionHeader>
                 <ul className="space-y-3">
-                    {sanitizedSummary.actionItems.map((item, index) => (
+                    {summary.actionItems.map((item, index) => (
                         <li key={index} className="flex items-start space-x-4 p-4 bg-card border border-gray-200/80 rounded-xl shadow-sm group">
                             <CheckCircleIcon className="w-7 h-7 text-green-500 mt-1 flex-shrink-0" />
                             <div className="flex-1 space-y-2">
