@@ -93,7 +93,7 @@ Ensure all environment variables are set in production:
 
 ```bash
 # Production environment variables
-export GEMINI_API_KEY="your_actual_gemini_key"
+export OPENROUTER_API_KEY="your_actual_openrouter_key"
 export NEXT_PUBLIC_CONVEX_URL="your_convex_url"
 export POLAR_ACCESS_TOKEN="your_polar_access_token"
 ```

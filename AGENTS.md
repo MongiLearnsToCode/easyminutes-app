@@ -15,7 +15,7 @@ Guidelines for agentic coding agents in this repo.
 - **Types**: Strict-ish TS, props via interfaces
 - **Naming**: PascalCase components, camelCase vars
 - **Errors**: Surface in UI, throw clear Errors
-- **Env**: `GEMINI_API_KEY` via `.env.local`
+- **Env**: `OPENROUTER_API_KEY` via `.env.local`
 - **Services**: No side-effects in components
 
 ## Rules
