@@ -67,6 +67,13 @@ const EditableMinutesDisplay: React.FC<{ summary: MeetingSummary; setSummary: Re
         updateSummary({ [field]: newList });
     };
 
+    const handleListBlur = (field: 'keyPoints' | 'decisions' | 'attendees', index: number) => {
+        const list = summary[field] as string[];
+        if (list[index] === '') {
+            removeListItem(field, index);
+        }
+    };
+
     const addListItem = (field: 'keyPoints' | 'decisions' | 'attendees') => {
         const list = summary[field] as string[];
         updateSummary({ [field]: [...list, ''] });
@@ -81,6 +88,12 @@ const EditableMinutesDisplay: React.FC<{ summary: MeetingSummary; setSummary: Re
         const newActionItems = [...summary.actionItems];
         newActionItems[index] = { ...newActionItems[index], [field]: value };
         updateSummary({ actionItems: newActionItems });
+    };
+
+    const handleActionItemBlur = (index: number) => {
+        if (summary.actionItems[index].task === '') {
+            removeActionItem(index);
+        }
     };
 
     const addActionItem = () => {
@@ -143,6 +156,7 @@ const EditableMinutesDisplay: React.FC<{ summary: MeetingSummary; setSummary: Re
                                     <input
                                         value={item}
                                         onChange={(e) => handleListChange(section, index, e.target.value)}
+                                        onBlur={() => handleListBlur(section, index)}
                                         className="flex-1 bg-transparent w-full focus:ring-0 border-none p-0 py-1"
                                         placeholder={`New ${section === 'keyPoints' ? 'key point' : 'decision'}...`}
                                     />
@@ -167,6 +181,7 @@ const EditableMinutesDisplay: React.FC<{ summary: MeetingSummary; setSummary: Re
                                 <input
                                     value={item.task}
                                     onChange={(e) => handleActionItemChange(index, 'task', e.target.value)}
+                                    onBlur={() => handleActionItemBlur(index)}
                                     placeholder="Action item task..."
 className="font-semibold text-foreground leading-tight w-full bg-transparent p-0 border-none focus:ring-0"
                                 />
