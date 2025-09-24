@@ -1,7 +1,6 @@
 
 "use client";
 
-import { authClient } from "@/lib/auth-client";
 import { useState } from "react";
 
 export function SignIn() {
@@ -15,22 +14,11 @@ export function SignIn() {
     setLoading(true);
 
     try {
-      console.log('Attempting to sign in with:', email);
-      const result = await authClient.signIn.email({
-        email,
-        password,
-      });
-
-      console.log('Sign in result:', result);
-
-      if (result?.error) {
-        console.error('Authentication failed:', result.error);
-        alert("Authentication failed: " + result.error.message);
-      } else {
-        console.log('Sign in successful, redirecting...');
-        // Redirect or handle success
-        window.location.href = "/";
-      }
+      // Simulate sign in - no actual authentication
+      console.log('Simulating sign in with:', email);
+      // Always succeed
+      console.log('Sign in successful, redirecting...');
+      window.location.href = "/";
     } catch (error) {
       console.error('Sign in error:', error);
       alert("An error occurred: " + (error as Error).message);

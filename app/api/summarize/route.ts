@@ -1,7 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { GoogleGenAI, Type } from "@google/genai";
-import { auth } from "@/lib/auth";
-import { headers } from "next/headers";
 
 const getApiKey = () => {
     const apiKey = process.env.GEMINI_API_KEY;
@@ -57,13 +55,6 @@ const schema = {
 
 export async function POST(request: NextRequest) {
   try {
-    const session = await auth.api.getSession({
-      headers: await headers()
-    });
-    if (!session) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
     console.log('Summarize API called');
 
     const body = await request.json();

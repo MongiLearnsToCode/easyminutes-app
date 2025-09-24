@@ -2,7 +2,6 @@ import React from 'react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
-import { authClient } from '@/lib/auth-client';
 
 interface UserAvatarProps {
   size?: 'sm' | 'md' | 'lg';
@@ -11,8 +10,7 @@ interface UserAvatarProps {
 }
 
 const UserAvatar: React.FC<UserAvatarProps> = ({ size = 'md', onProfileClick, onSettingsClick }) => {
-  const { data: session } = authClient.useSession();
-  const user = session?.user;
+  const user = { name: 'Demo User', email: 'demo@example.com', image: '' };
 
   const getSizeClasses = () => {
     switch (size) {
@@ -47,8 +45,6 @@ const UserAvatar: React.FC<UserAvatarProps> = ({ size = 'md', onProfileClick, on
         <DropdownMenuSeparator />
         <DropdownMenuItem onClick={onProfileClick}>Profile</DropdownMenuItem>
         <DropdownMenuItem onClick={onSettingsClick}>Settings</DropdownMenuItem>
-        <DropdownMenuSeparator />
-         <DropdownMenuItem onClick={() => authClient.signOut({ callbackUrl: '/' })}>Log out</DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
   );

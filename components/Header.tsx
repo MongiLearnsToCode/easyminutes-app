@@ -4,7 +4,6 @@ import UserAvatar from './UserAvatar';
 import { LogoIcon, SpinnerIcon, CheckCircleIcon } from '../constants';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
-import { authClient } from '@/lib/auth-client';
 
 interface HeaderProps {
     currentView: 'dashboard' | 'allMeetings' | 'pricing' | 'profile' | 'settings' | 'success';
@@ -19,8 +18,6 @@ interface HeaderProps {
 const Header: React.FC<HeaderProps> = ({ currentView, onNavigate, savingStatus }) => {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const { theme, setTheme, actualTheme } = useTheme();
-    const { data: session } = authClient.useSession();
-    const isAuthenticated = !!session;
 
     const handleNavigation = (view: 'dashboard' | 'allMeetings' | 'pricing') => {
         onNavigate(view);
@@ -84,13 +81,11 @@ const Header: React.FC<HeaderProps> = ({ currentView, onNavigate, savingStatus }
                         </nav>
                         
                         {/* User Avatar */}
-                        {isAuthenticated && (
-                            <UserAvatar 
-                                size="md"
-                                onProfileClick={() => onNavigate('profile')}
-                                onSettingsClick={() => onNavigate('settings')}
-                            />
-                        )}
+                        <UserAvatar
+                            size="md"
+                            onProfileClick={() => onNavigate('profile')}
+                            onSettingsClick={() => onNavigate('settings')}
+                        />
                         {/* Mobile/Tablet Hamburger Menu */}
                         <Sheet open={isMenuOpen} onOpenChange={setIsMenuOpen}>
                             <SheetTrigger asChild>
@@ -151,18 +146,7 @@ const Header: React.FC<HeaderProps> = ({ currentView, onNavigate, savingStatus }
                                         </Button>
                                     </nav>
                                     
-                                    {isAuthenticated && (
-                                        <div className="p-4 border-t border-border">
-                                            <Button
-                                                variant="outline"
-                                                size="lg"
-                                                onClick={() => authClient.signOut({ callbackUrl: '/' })}
-                                                className="w-full"
-                                            >
-                                                Logout
-                                            </Button>
-                                        </div>
-                                    )}
+
                                 </div>
                             </SheetContent>
                         </Sheet>
