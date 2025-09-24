@@ -14,7 +14,7 @@ export const getCurrentUser = query({
 
 export const getCurrentUserIdentity = query({
     handler: async (ctx) => {
-        return { subject: 'demo-user', email: 'demo@example.com' };
+        return { subject: 'demo-user', email: 'demo@example.com', name: 'Demo User' };
     },
 });
 
