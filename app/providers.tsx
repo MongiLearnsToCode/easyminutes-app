@@ -11,6 +11,7 @@ if (!convexUrl) {
 const convex = new ConvexReactClient(convexUrl || '');
 
 export default function Providers({ children }: { children: React.ReactNode }) {
+  // No auth mode - using ConvexProvider without auth
   return (
     <ConvexProvider client={convex}>
       {children}
