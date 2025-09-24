@@ -91,16 +91,17 @@ const EditableMinutesDisplay: React.FC<{ summary: MeetingSummary; setSummary: Re
         updateSummary({ actionItems: summary.actionItems.filter((_, i) => i !== index) });
     };
 
+    // Only sanitize when rendering HTML content, not for input values
     const sanitizedSummary = {
         ...summary,
-        summary: DOMPurify.sanitize(summary.summary),
-        attendees: summary.attendees.map(attendee => DOMPurify.sanitize(attendee)),
-        keyPoints: summary.keyPoints.map(point => DOMPurify.sanitize(point)),
-        decisions: summary.decisions.map(decision => DOMPurify.sanitize(decision)),
+        summary: summary.summary, // Keep raw for textarea
+        attendees: summary.attendees, // Keep raw for inputs
+        keyPoints: summary.keyPoints, // Keep raw for inputs
+        decisions: summary.decisions, // Keep raw for inputs
         actionItems: summary.actionItems.map(item => ({
             ...item,
-            task: DOMPurify.sanitize(item.task),
-            owner: DOMPurify.sanitize(item.owner),
+            task: item.task, // Keep raw for inputs
+            owner: item.owner, // Keep raw for inputs
         })),
     };
 
