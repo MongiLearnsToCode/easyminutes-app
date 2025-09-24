@@ -56,53 +56,53 @@ const AddItemButton: React.FC<{ onClick: () => void; children: React.ReactNode }
 
 const EditableMinutesDisplay: React.FC<{ summary: MeetingSummary; setSummary: React.Dispatch<React.SetStateAction<MeetingSummary | null>> }> = ({ summary, setSummary }) => {
 
-    const updateSummary = (update: Partial<MeetingSummary>) => {
+    const updateSummary = useCallback((update: Partial<MeetingSummary>) => {
         setSummary(current => current ? { ...current, ...update } : null);
-    };
+    }, [setSummary]);
 
-    const handleListChange = (field: 'keyPoints' | 'decisions' | 'attendees', index: number, value: string) => {
+    const handleListChange = useCallback((field: 'keyPoints' | 'decisions' | 'attendees', index: number, value: string) => {
         const list = summary[field] as string[];
         const newList = [...list];
         newList[index] = value;
         updateSummary({ [field]: newList });
-    };
+    }, [summary, updateSummary]);
 
-    const handleListBlur = (field: 'keyPoints' | 'decisions' | 'attendees', index: number) => {
+    const handleListBlur = useCallback((field: 'keyPoints' | 'decisions' | 'attendees', index: number) => {
         const list = summary[field] as string[];
         if (list[index] === '') {
             removeListItem(field, index);
         }
-    };
+    }, [summary, removeListItem]);
 
-    const addListItem = (field: 'keyPoints' | 'decisions' | 'attendees') => {
+    const addListItem = useCallback((field: 'keyPoints' | 'decisions' | 'attendees') => {
         const list = summary[field] as string[];
         updateSummary({ [field]: [...list, ''] });
-    };
+    }, [summary, updateSummary]);
 
-    const removeListItem = (field: 'keyPoints' | 'decisions' | 'attendees', index: number) => {
+    const removeListItem = useCallback((field: 'keyPoints' | 'decisions' | 'attendees', index: number) => {
         const list = summary[field] as string[];
         updateSummary({ [field]: list.filter((_, i) => i !== index) });
-    };
+    }, [summary, updateSummary]);
     
-    const handleActionItemChange = (index: number, field: keyof ActionItem, value: string) => {
+    const handleActionItemChange = useCallback((index: number, field: keyof ActionItem, value: string) => {
         const newActionItems = [...summary.actionItems];
         newActionItems[index] = { ...newActionItems[index], [field]: value };
         updateSummary({ actionItems: newActionItems });
-    };
+    }, [summary, updateSummary]);
 
-    const handleActionItemBlur = (index: number) => {
+    const handleActionItemBlur = useCallback((index: number) => {
         if (summary.actionItems[index].task === '') {
             removeActionItem(index);
         }
-    };
+    }, [summary, removeActionItem]);
 
-    const addActionItem = () => {
+    const addActionItem = useCallback(() => {
         updateSummary({ actionItems: [...summary.actionItems, { task: '', owner: '' }] });
-    };
+    }, [summary, updateSummary]);
     
-    const removeActionItem = (index: number) => {
+    const removeActionItem = useCallback((index: number) => {
         updateSummary({ actionItems: summary.actionItems.filter((_, i) => i !== index) });
-    };
+    }, [summary, updateSummary]);
 
 
 
@@ -126,7 +126,7 @@ const EditableMinutesDisplay: React.FC<{ summary: MeetingSummary; setSummary: Re
                 <SectionHeader>Attendees</SectionHeader>
                 <div className="flex flex-wrap gap-4">
                     {summary.attendees.map((attendee, index) => (
-                        <div key={index} className="flex items-center gap-2 group">
+                        <div key={`attendee-${index}`} className="flex items-center gap-2 group">
                             <AttendeeAvatar name={attendee} />
                             <input
                                 value={attendee}
@@ -151,7 +151,7 @@ const EditableMinutesDisplay: React.FC<{ summary: MeetingSummary; setSummary: Re
                         <SectionHeader>{section === 'keyPoints' ? 'Key Points' : 'Decisions Made'}</SectionHeader>
                         <ul className="space-y-3">
                             {summary[section].map((item, index) => 
-<li key={index} className="flex items-center group text-muted-foreground/90 leading-relaxed gap-2">
+<li key={`${section}-${index}`} className="flex items-center group text-muted-foreground/90 leading-relaxed gap-2">
 <span className="text-primary font-bold text-lg flex-shrink-0">•</span>
                                     <input
                                         value={item}
@@ -175,7 +175,7 @@ const EditableMinutesDisplay: React.FC<{ summary: MeetingSummary; setSummary: Re
                 <SectionHeader>Action Items</SectionHeader>
                 <ul className="space-y-3">
                     {summary.actionItems.map((item, index) => (
-                        <li key={index} className="flex items-start space-x-4 p-4 bg-card border border-gray-200/80 rounded-xl shadow-sm group">
+                        <li key={`action-item-${index}`} className="flex items-start space-x-4 p-4 bg-card border border-gray-200/80 rounded-xl shadow-sm group">
                             <CheckCircleIcon className="w-7 h-7 text-green-500 mt-1 flex-shrink-0" />
                             <div className="flex-1 space-y-2">
                                 <input
